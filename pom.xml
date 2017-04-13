@@ -107,5 +107,10 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.insanusmokrassar</groupId>
+            <artifactId>iobject</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 </project>

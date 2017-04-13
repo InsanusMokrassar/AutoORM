@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar.interfaces;
+package com.github.insanusmokrassar.AbstractDatabaseORM.queries;
 
 public interface ISearchQuery<T> {
 
@@ -13,4 +13,5 @@ public interface ISearchQuery<T> {
     ISearchQuery<T> not(ISearchQuery<T> query);
 
     ISearchQuery<T> getNew();
+    ISearchQuery<T> getNew(T model);
 }

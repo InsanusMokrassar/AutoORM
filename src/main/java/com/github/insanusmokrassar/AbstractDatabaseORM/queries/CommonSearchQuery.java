@@ -1,25 +1,21 @@
-package com.github.insanusmokrassar.SearchQueryRealisations;
-
-import com.github.insanusmokrassar.androidutils.commonutils.FieldsExtractor;
-import com.github.insanusmokrassar.androidutils.commonutils.AndroidSpecific.Log;
-import com.github.insanusmokrassar.androidutils.databaseutils.sql.free.Operators;
-import com.github.insanusmokrassar.androidutils.databaseutils.sql.free.interfaces.ISearchQuery;
+package com.github.insanusmokrassar.AbstractDatabaseORM.queries;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class SQLSearchQuery<T> implements ISearchQuery<T>{
+public class CommonSearchQuery<T> implements ISearchQuery<T> {
     protected final Class<? extends T> targetClass;
     protected final List<Field> fields = new ArrayList<>();
     protected String query = "";
 
-    protected static final String standardTemplate = " %s %s%s\'%s\'";
-    protected static final String searchQueryTemplate = " %s (%s)";
+    protected String standardTemplate = " %s %s%s\'%s\'";
+    protected String searchQueryTemplate = " %s (%s)";
 
-    public SQLSearchQuery(Class<? extends T> targetClass) {
+    public CommonSearchQuery(Class<? extends T> targetClass) {
         this.targetClass = targetClass;
-        fields.addAll(FieldsExtractor.getPublicFields(targetClass));
+        fields.addAll(Arrays.asList(targetClass.getFields()));
     }
 
     @Override
@@ -34,37 +30,54 @@ public class SQLSearchQuery<T> implements ISearchQuery<T>{
 
     @Override
     public ISearchQuery<T> and(T model, String operator) {
-        query = constructBinarCondition(query, model, "AND", operator, standardTemplate);
+        query = constructBinarCondition(fields, query, model, getAndKey(), operator, standardTemplate);
         return this;
     }
 
     @Override
     public ISearchQuery<T> or(T model, String operator) {
-        query = constructBinarCondition(query, model, "OR", operator, standardTemplate);
+        query = constructBinarCondition(fields, query, model, getOrKey(), operator, standardTemplate);
         return this;
     }
 
     @Override
     public ISearchQuery<T> and(ISearchQuery<T> query) {
-        this.query = constructCompleteCondition(this.query, query, "AND", searchQueryTemplate);
+        this.query = constructCompleteCondition(this.query, query, getAndKey(), searchQueryTemplate);
         return this;
     }
 
     @Override
     public ISearchQuery<T> or(ISearchQuery<T> query) {
-        this.query = constructCompleteCondition(this.query, query, "OR", searchQueryTemplate);
+        this.query = constructCompleteCondition(this.query, query, getOrKey(), searchQueryTemplate);
         return this;
     }
 
     @Override
     public ISearchQuery<T> not(ISearchQuery<T> query) {
-        this.query = constructCompleteCondition(this.query, query, "NOT", searchQueryTemplate);
+        this.query = constructCompleteCondition(this.query, query, getNotKey(), searchQueryTemplate);
         return this;
+    }
+
+    public String getAndKey() {
+        return "AND";
+    }
+
+    public String getOrKey() {
+        return "OR";
+    }
+
+    public String getNotKey() {
+        return "NOT";
     }
 
     @Override
     public ISearchQuery<T> getNew() {
-        return new SQLSearchQuery<>(targetClass);
+        return new CommonSearchQuery<>(targetClass);
+    }
+
+    @Override
+    public ISearchQuery<T> getNew(T model) {
+        return new CommonSearchQuery<>(targetClass).and(model);
     }
 
     @Override
@@ -72,7 +85,7 @@ public class SQLSearchQuery<T> implements ISearchQuery<T>{
         return query;
     }
 
-    protected String constructBinarCondition(String query, T model, String separator, String operator, String template) {
+    protected static <T> String constructBinarCondition(List<Field> fields, String query, T model, String separator, String operator, String template) {
         String result = "";
         for (Field field : fields) {
             try {
@@ -87,19 +100,21 @@ public class SQLSearchQuery<T> implements ISearchQuery<T>{
                     );
                 }
             } catch (IllegalAccessException e) {
-                Log.e(getClass().getSimpleName(), "Can't get access to the field", e);
+                System.err.println("E\\" + CommonSearchQuery.class.getSimpleName() + ": Can't get access to the field");
+                e.printStackTrace();
             }
         }
         query += result;
         return query;
     }
 
-    protected String constructCompleteCondition(String query, ISearchQuery<T> searchQuery, String separator, String template) {
+    protected static String constructCompleteCondition(String query, ISearchQuery searchQuery, String separator, String template) {
         query += String.format(
                 template,
-                (this.query.isEmpty() ? "" : separator),
+                (query.isEmpty() ? "" : separator),
                 searchQuery.toString()
         );
         return query;
     }
+
 }

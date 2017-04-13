@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar.annotations;
+package com.github.insanusmokrassar.AbstractDatabaseORM.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar;
+package com.github.insanusmokrassar.AbstractDatabaseORM;
 
 public class Example {
     public static void main(String[] args) {

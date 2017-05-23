@@ -164,6 +164,11 @@
         </dependency>
         <dependency>
             <groupId>com.github.insanusmokrassar</groupId>
+            <artifactId>IObjectKRealisations</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.insanusmokrassar</groupId>
             <artifactId>iobjectk</artifactId>
             <version>1.0</version>
         </dependency>

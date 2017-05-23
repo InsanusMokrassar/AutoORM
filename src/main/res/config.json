@@ -1,0 +1,19 @@
+{
+  "drivers": [
+    {
+      "name" : "Some name",
+      "classpath" : "some.package.class.path",
+      "driverParameters" : {
+      },
+      "cache" : false
+    }
+  ],
+  "databasesConfigs" : [
+    {
+      "name" : "DatabaseName",
+      "driverName" : "Some Name of driver",
+      "bindParameters" : {
+      }
+    }
+  ]
+}

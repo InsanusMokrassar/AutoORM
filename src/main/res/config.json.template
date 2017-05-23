@@ -1,0 +1,21 @@
+{
+    "drivers": [
+        {
+            "name" : "Some name",
+            "classpath" : "some.package.class.path",
+            "driverParameters" : {
+                //this object will be passed as parameter of driver constructor
+            },
+            "cache" : "true|false"
+        }
+    ],
+    "databasesConfigs" : [
+        {
+            "name" : "DatabaseName",
+            "driverName" : "Some Name of driver",
+            "bindParameters" : {
+                //this object will be passed as parameter of driver method "bindDatabase"
+            }
+        }
+    ]
+}

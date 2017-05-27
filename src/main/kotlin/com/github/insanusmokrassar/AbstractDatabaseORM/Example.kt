@@ -1,6 +1,5 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.ConfigReader
 import com.github.insanusmokrassar.IObjectKRealisations.JSONIObject
 import java.io.File
 import java.io.FileInputStream
@@ -25,6 +24,5 @@ fun main(args: Array<String>) {
         configStringBuffer.append("$current\n\r")
     }
     val config = JSONIObject(configStringBuffer.toString())
-    ConfigReader(config)
     Logger.getGlobal().info("HelloWorld")
 }

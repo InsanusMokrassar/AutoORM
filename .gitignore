@@ -4,4 +4,7 @@ out/*
 target
 log.txt
 
+src/main/res/config.json
+*.lck
+
 settings.xml

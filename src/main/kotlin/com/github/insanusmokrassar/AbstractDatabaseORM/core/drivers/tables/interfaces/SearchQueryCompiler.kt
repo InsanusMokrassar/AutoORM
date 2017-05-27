@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.interfaces
+package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces
 
 interface SearchQueryCompiler<Out : Any> {
     fun setNeededFields(vararg fieldNames : String) : SearchQueryCompiler<Out>

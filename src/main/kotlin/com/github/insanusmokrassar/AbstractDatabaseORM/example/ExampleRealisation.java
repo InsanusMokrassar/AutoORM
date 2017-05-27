@@ -1,7 +1,7 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.example;
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.interfaces.SearchQueryCompiler;
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.interfaces.TableProvider;
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler;
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider;
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,5 +1,7 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
+import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example
+import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable
 import java.io.FileInputStream
 import java.util.logging.LogManager
 import java.util.logging.Logger
@@ -22,4 +24,5 @@ fun main(args: Array<String>) {
 //    }
 //    val config = JSONIObject(configStringBuffer.toString())
     Logger.getGlobal().info("HelloWorld")
+    DatabaseManager().getTable(ExampleTable::class, Example::class).findNameBirthdayWhereNameIs("Georgiy")
 }

@@ -1,8 +1,8 @@
-package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.abstracts
+package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.interfaces.SearchQueryCompiler
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.interfaces.TableProvider
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.insancesKClass
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.intsancesKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -34,7 +34,7 @@ abstract class AbstractTableProvider<T : Any>(protected val targetClass : KClass
         val values = HashMap<KProperty<*>, Any>()
 
         variablesList.filter {
-            it.insancesKClass() != Any::class && (!it.returnType.isMarkedNullable || it.call(what) != null)
+            it.intsancesKClass() != Any::class && (!it.returnType.isMarkedNullable || it.call(what) != null)
         }.forEach {
             it.call(what)?.let { value ->
                 values.put(

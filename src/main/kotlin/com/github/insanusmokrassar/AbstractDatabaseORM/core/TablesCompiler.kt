@@ -5,20 +5,20 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Ex
 import kotlin.reflect.KClass
 
 class TablesCompiler {
-    protected val compiledMap : MutableMap<KClass<out Any>, Class<out Any>> = HashMap()
+    protected val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
     init {
-        compiledMap.put(ExampleTable::class, ExampleTableRealisation::class.java)
+        compiledMap.put(ExampleTable::class, ExampleTableRealisation::class)
     }
 
-    fun <T : Any> getRealisation(what : KClass<T>) : Class<T>  {
+    fun <T : Any> getRealisation(what : KClass<T>) : KClass<T>  {
         if (!compiledMap.containsKey(what)) {
             compiledMap.put(what, compile(what))
         }
-        return compiledMap[what] as Class<T>
+        return compiledMap[what] as KClass<T>
     }
 
-    protected fun <T : Any> compile(what : KClass<T>) : Class<T> {
+    protected fun <T : Any> compile(what : KClass<T>) : KClass<T> {
         throw UnsupportedOperationException("Now I can't compile classes :(")
     }
 }

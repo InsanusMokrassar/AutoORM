@@ -3,6 +3,7 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.example;
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler;
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider;
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example;
+import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations;
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,9 +13,9 @@ import java.util.List;
 
 public class ExampleTableRealisation implements ExampleTable{
 
-    protected final TableProvider<Example> provider;
+    protected final TableProvider<Example, ExampleOperations> provider;
 
-    public ExampleTableRealisation(TableProvider<Example> provider) {
+    public ExampleTableRealisation(TableProvider<Example, ExampleOperations> provider) {
         this.provider = provider;
     }
 
@@ -24,7 +25,7 @@ public class ExampleTableRealisation implements ExampleTable{
         queryCompiler.setNeededFields("name", "birthday");
         queryCompiler.field("name", false);
         queryCompiler.filter("eq", name);
-        Collection<Example> result = provider.find(queryCompiler);
+        Collection<ExampleOperations> result = provider.find(queryCompiler);
         return new ArrayList<Example>(result);
     }
 }

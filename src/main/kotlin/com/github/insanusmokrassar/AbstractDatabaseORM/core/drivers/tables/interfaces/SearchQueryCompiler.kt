@@ -11,7 +11,8 @@ interface SearchQueryCompiler<Out : Any> {
 
     fun linkWithNext(linkOperator: String = "or"): SearchQueryCompiler<Out>
 
-    fun paging(page: Int = 0, offset: Int = 0, size: Int = 1): SearchQueryCompiler<Out>
+    fun paging(page: Int = 0, size: Int = 1): SearchQueryCompiler<Out>
 
     fun compileQuery() : Out
+    fun compilePaging(): Out
 }

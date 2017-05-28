@@ -1,25 +1,24 @@
 {
-    "drivers": [
-        {
-            "name" : "JDBCDriver",
-            "classpath" : "com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc.JDBCDatabaseDriver",
-            "driverParameters" : {
-                "username" : "",
-                "password" : "",
-                "url" : "jdbc:h2:mem:test",
-                "jdbcDriverPath" : "org.h2.Driver"
-            },
-            "cache": true
-        }
-    ],
-    "databases" : [
-        {
-            "name" : "ExampleDatabase",
-            "driver" : "Some Name of driver",
-            "bindParameters" : {
-                //this object will be passed as parameter of driver method "bindDatabase"
-            },
-            "cache": false
-        }
-    ]
+  "drivers": [
+    {
+      "name" : "JDBCDriver",
+      "classpath" : "com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc.JDBCDatabaseDriver",
+      "config" : {
+        "jdbcDriverPath" : "org.h2.Driver"
+      },
+      "cache": true
+    }
+  ],
+  "databases" : [
+    {
+      "name" : "Example",
+      "driver" : "JDBCDriver",
+      "config" : {
+        "username" : "",
+        "password" : "",
+        "url" : "jdbc:h2:mem:example"
+      },
+      "cache": false
+    }
+  ]
 }

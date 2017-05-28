@@ -18,7 +18,7 @@ abstract class AbstractSearchQueryCompiler<T : Any> : SearchQueryCompiler<T> {
     var getFields : List<String>? = null
     val filters : MutableList<Filter> = ArrayList()
     var currentFilter: Filter? = null
-    var pageFilter = PageFilter()
+    var pageFilter : PageFilter? = null
 
     override fun setNeededFields(vararg fieldNames: String): SearchQueryCompiler<T> {
         getFields = fieldNames.asList()
@@ -55,8 +55,8 @@ abstract class AbstractSearchQueryCompiler<T : Any> : SearchQueryCompiler<T> {
         return this
     }
 
-    override fun paging(page: Int, offset: Int, size: Int): SearchQueryCompiler<T> {
-        pageFilter = PageFilter(page, offset, size)
+    override fun paging(page: Int, size: Int): SearchQueryCompiler<T> {
+        pageFilter = PageFilter(page, size)
         return this
     }
 

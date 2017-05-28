@@ -11,13 +11,13 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
 class DatabaseConnect(private val driver: TableDriver, private val transactionManager: Transactable) : Transactable {
-
-    private val tablesCompiler = TablesCompiler()
-
     @Throws(IllegalArgumentException::class)
-    fun <T : Any, M : Any> getTable(tableClass: KClass<T>, modelClass: KClass<M>): T {
-        val provider = driver.getTableProvider(modelClass)
-        val realisation = tablesCompiler.getRealisation(tableClass)
+    fun <T : Any, M : Any, O : M> getTable(
+            tableClass: KClass<T>,
+            modelClass: KClass<M>,
+            operationsClass: KClass<in O> = modelClass): T {
+        val provider = driver.getTableProvider(modelClass, operationsClass)
+        val realisation = TablesCompiler.getRealisation(tableClass)
         val result = realisation.constructors.getFirst {
             it.parameters.size == 1 && (it.parameters[0].type.classifier as KClass<*>).isSubclassOf(TableProvider::class)
         }?.call(

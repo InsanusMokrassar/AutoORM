@@ -6,11 +6,10 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.core.intsancesKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-abstract class AbstractTableProvider<T : Any>(protected val targetClass : KClass<T>) : TableProvider<T> {
-
+abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: KClass<M>, protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
     val variablesList: List<KProperty<*>> = {
         val futureList = ArrayList<KProperty<*>>()
-        targetClass.members.filter {
+        modelClass.members.filter {
             it is KProperty<*>
         }.forEach {
             futureList.add(it as KProperty<*>)
@@ -20,17 +19,17 @@ abstract class AbstractTableProvider<T : Any>(protected val targetClass : KClass
 
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 
-    override fun insert(what: T): Boolean {
+    override fun insert(what: M): Boolean {
         return insert(toValuesMap(what))
     }
 
     abstract fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<out Any>): Boolean
 
-    override fun update(than: T, where: SearchQueryCompiler<out Any>): Boolean {
+    override fun update(than: M, where: SearchQueryCompiler<out Any>): Boolean {
         return update(toValuesMap(than), where)
     }
 
-    protected fun toValuesMap(what: T) : Map<KProperty<*>, Any> {
+    protected fun toValuesMap(what: M) : Map<KProperty<*>, Any> {
         val values = HashMap<KProperty<*>, Any>()
 
         variablesList.filter {
@@ -44,6 +43,10 @@ abstract class AbstractTableProvider<T : Any>(protected val targetClass : KClass
             }
         }
         return values
+    }
+
+    protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
+        TODO()
     }
 
 }

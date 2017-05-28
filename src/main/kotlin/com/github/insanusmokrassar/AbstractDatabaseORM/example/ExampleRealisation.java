@@ -3,6 +3,7 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.example;
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler;
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider;
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example;
+import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations;
 import org.jetbrains.annotations.NotNull;
 
 public class ExampleRealisation implements Example {
@@ -10,13 +11,7 @@ public class ExampleRealisation implements Example {
     public String name;
     public String birthday;
 
-    protected final TableProvider<Example> provider;
-
     protected Boolean invalid = false;
-
-    public ExampleRealisation(TableProvider<Example> provider) {
-        this.provider = provider;
-    }
 
     @NotNull
     public String getName() {
@@ -32,29 +27,5 @@ public class ExampleRealisation implements Example {
             throw new IllegalStateException("Object is invalidated");
         }
         return birthday;
-    }
-
-    public void update() {
-        if (invalid) {
-            throw new IllegalStateException("Object is invalidated");
-        }
-        provider.update(this, provider.getEmptyQuery());
-    }
-
-    public void insert() {
-        if (invalid) {
-            throw new IllegalStateException("Object is invalidated");
-        }
-        provider.insert(this);
-    }
-
-    public void remove() {
-        if (invalid) {
-            throw new IllegalStateException("Object is invalidated");
-        }
-        SearchQueryCompiler queryCompiler = provider.getEmptyQuery();
-        queryCompiler.field("id", false);
-        queryCompiler.filter("eq", id);
-        provider.remove(queryCompiler);
     }
 }

@@ -9,6 +9,9 @@ private val operations = mapOf(
                 "eq",
                 {
                     it: Filter ->
+                    if (it.args[0] is String && !(it.args[0] as String).matches(Regex("\".*\""))) {
+                        it.args[0] = "\"${it.args[0]}\""
+                    }
                     if (it.isNot) {
                         "${it.field} != ${it.args[0]}"
                     } else {
@@ -91,9 +94,18 @@ private val operations = mapOf(
 )
 
 class JDBCSearchQueryCompiler : AbstractSearchQueryCompiler<String>() {
+    override fun compilePaging(): String {
+        if (pageFilter != null) {
+            val offset = pageFilter!!.page * pageFilter!!.size
+            return " LIMIT ${pageFilter!!.size} OFFSET $offset"
+        } else {
+            return ""
+        }
+    }
+
     override fun compileQuery(): String {
         prepareToCompilingQuery()
-        val queryBuilder = StringBuilder()
+        val queryBuilder = StringBuilder().append(" WHERE ")
 
         filters.forEach {
             if (it.logicalLink != null) {

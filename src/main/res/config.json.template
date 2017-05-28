@@ -12,7 +12,7 @@
             "cache" : true
         }
     ],
-    "databases" : [
+    "databaseDrivers" : [
         {
             "name" : "ExampleDatabase",
             "driverName" : "Some Name of driver",

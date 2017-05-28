@@ -5,7 +5,7 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.inter
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-class JDBCTableProvider<T : Any>(targetClass: KClass<T>) : AbstractTableProvider<T>(targetClass) {
+class JDBCTableProvider<M : Any>(targetClass: KClass<M>) : AbstractTableProvider<M>(targetClass) {
     override fun start() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -22,8 +22,7 @@ class JDBCTableProvider<T : Any>(targetClass: KClass<T>) : AbstractTableProvider
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun find(where: SearchQueryCompiler<out Any>): Collection<T> {
-        println(where.compileQuery() as String)
+    override fun find(where: SearchQueryCompiler<out Any>): Collection<M> {
         return emptyList()
     }
 

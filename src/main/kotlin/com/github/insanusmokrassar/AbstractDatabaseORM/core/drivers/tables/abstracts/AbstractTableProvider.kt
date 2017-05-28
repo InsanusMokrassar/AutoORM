@@ -10,7 +10,7 @@ abstract class AbstractTableProvider<T : Any>(protected val targetClass : KClass
 
     val variablesList: List<KProperty<*>> = {
         val futureList = ArrayList<KProperty<*>>()
-        targetClass::class.members.filter {
+        targetClass.members.filter {
             it is KProperty<*>
         }.forEach {
             futureList.add(it as KProperty<*>)

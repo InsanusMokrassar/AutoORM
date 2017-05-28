@@ -9,16 +9,17 @@
                 "url" : "jdbc:h2:mem:test",
                 "jdbcDriverPath" : "org.h2.Driver"
             },
-            "cache" : true
+            "cache": true
         }
     ],
-    "databaseDrivers" : [
+    "databases" : [
         {
             "name" : "ExampleDatabase",
-            "driverName" : "Some Name of driver",
+            "driver" : "Some Name of driver",
             "bindParameters" : {
                 //this object will be passed as parameter of driver method "bindDatabase"
-            }
+            },
+            "cache": false
         }
     ]
 }

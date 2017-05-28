@@ -4,10 +4,11 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.core.TablesCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.databases.interfaces.DatabaseDriver
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc.JDBCDatabaseDriver
+import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-class DatabaseManager {
+class DatabaseManager(config : IObject<Any>) {
 
     protected val tablesCompiler = TablesCompiler()
     protected val databases : MutableList<DatabaseDriver> = ArrayList()

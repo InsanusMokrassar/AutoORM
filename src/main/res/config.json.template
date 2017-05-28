@@ -1,17 +1,20 @@
 {
     "drivers": [
         {
-            "name" : "Some name",
-            "classpath" : "some.package.class.path",
+            "name" : "JDBCDriver",
+            "classpath" : "com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc.JDBCDatabaseDriver",
             "driverParameters" : {
-                //this object will be passed as parameter of driver constructor
+                "username" : "",
+                "password" : "",
+                "url" : "jdbc:h2:mem:test",
+                "jdbcDriverPath" : "org.h2.Driver"
             },
-            "cache" : "true|false"
+            "cache" : true
         }
     ],
-    "databasesConfigs" : [
+    "databases" : [
         {
-            "name" : "DatabaseName",
+            "name" : "ExampleDatabase",
             "driverName" : "Some Name of driver",
             "bindParameters" : {
                 //this object will be passed as parameter of driver method "bindDatabase"

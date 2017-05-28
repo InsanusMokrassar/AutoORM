@@ -1,9 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.example;
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler;
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider;
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example;
-import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations;
 import org.jetbrains.annotations.NotNull;
 
 public class ExampleRealisation implements Example {

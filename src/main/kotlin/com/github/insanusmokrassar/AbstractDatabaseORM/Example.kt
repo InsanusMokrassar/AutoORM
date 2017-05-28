@@ -8,7 +8,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.*
 import java.util.logging.LogManager
-import java.util.logging.Logger
 
 fun main(args: Array<String>) {
     try {

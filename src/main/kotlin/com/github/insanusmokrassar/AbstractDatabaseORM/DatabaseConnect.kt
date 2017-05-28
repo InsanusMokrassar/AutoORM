@@ -1,12 +1,10 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.TablesCompiler
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.databases.interfaces.DatabaseDriver
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableDriver
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.Transactable
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.getFirst
-import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 

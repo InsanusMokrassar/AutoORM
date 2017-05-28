@@ -4,7 +4,6 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.databases.in
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.getFirst
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 
 class DatabaseManager(config : IObject<Any>) {

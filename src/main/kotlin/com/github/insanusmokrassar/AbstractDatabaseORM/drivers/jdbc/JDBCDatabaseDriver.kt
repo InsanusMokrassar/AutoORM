@@ -2,7 +2,6 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.DatabaseConnect
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.databases.interfaces.DatabaseDriver
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import java.sql.DriverManager
 import kotlin.reflect.KClass

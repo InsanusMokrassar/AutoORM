@@ -1,5 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
+import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager.isNullable
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 
@@ -27,16 +28,7 @@ fun KCallable<*>.isReturnNative() : Boolean {
     return nativeTypes.contains(this.returnClass())
 }
 
-fun KProperty<*>.isPrimaryField() : Boolean {
-    this.annotations.forEach {
-        if (it.annotationClass == PrimaryKey::class) {
-            return@isPrimaryField true
-        }
-    }
-    return false
-}
-
-fun KProperty<*>.toJavaPropertyString() : String {
+fun KCallable<*>.toJavaPropertyString() : String {
     val returnClass = returnType.classifier as KClass<*>
     val returnedType = StringBuilder()
     if (returnClass.javaPrimitiveType != null && !isNullable()) {
@@ -57,8 +49,36 @@ fun KProperty<*>.toJavaPropertyString() : String {
             returnedType.append(">")
         }
     }
-
     return returnedType.toString()
+}
+
+fun KClass<*>.toJavaPropertyString(isNullable: Boolean) : String {
+    val returnedType = StringBuilder()
+    if (javaPrimitiveType != null && !isNullable) {
+        returnedType.append(javaPrimitiveType!!.simpleName)
+        return returnedType.toString()
+    } else {
+        returnedType.append(javaObjectType.simpleName)
+    }
+    return returnedType.toString()
+}
+
+fun KClass<*>.getPrimaryFieldName() : KProperty<*>? {
+    this.members.forEach {
+        if (it is KProperty<*> && it.isPrimaryField()) {
+            return@getPrimaryFieldName it
+        }
+    }
+    return null
+}
+
+fun KProperty<*>.isPrimaryField() : Boolean {
+    this.annotations.forEach {
+        if (it.annotationClass == PrimaryKey::class) {
+            return@isPrimaryField true
+        }
+    }
+    return false
 }
 
 fun KProperty<*>.isMutable() : Boolean {

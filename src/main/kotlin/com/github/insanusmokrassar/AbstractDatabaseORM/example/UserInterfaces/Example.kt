@@ -7,4 +7,5 @@ interface Example {
     val id: Int?
     val name: String
     val birthday: String
+    var old: Int
 }

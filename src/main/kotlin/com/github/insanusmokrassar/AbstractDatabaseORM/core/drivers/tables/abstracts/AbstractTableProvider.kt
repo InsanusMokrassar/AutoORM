@@ -10,15 +10,13 @@ import kotlin.reflect.KProperty
 abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: KClass<M>, protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
     val variablesMap: Map<String, KProperty<*>> = {
         val futureMap = HashMap<String, KProperty<*>>()
-        modelClass.members.filter {
-            it is KProperty<*>
-        }.forEach {
-            futureMap.put(it.name, it as KProperty<*>)
+        modelClass.getVariables().forEach {
+            futureMap.put(it.name, it)
         }
         futureMap
     }()
 
-    val constructorRequiredVariables : List<KProperty<*>> = variablesMap.values.getRequiredInConstructor()
+    val constructorRequiredVariables : List<KProperty<*>> = modelClass.getRequiredInConstructor()
 
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 

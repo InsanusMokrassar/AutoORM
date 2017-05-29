@@ -34,4 +34,12 @@ public class ExampleRealisation implements Example {
     public Integer getId() {
         return id;
     }
+
+    public int getOld() {
+        return 0;
+    }
+
+    public void setOld(int i) {
+
+    }
 }

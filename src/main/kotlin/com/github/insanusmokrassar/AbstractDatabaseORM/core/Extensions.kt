@@ -36,12 +36,36 @@ fun KProperty<*>.isPrimaryField() : Boolean {
     return false
 }
 
-inline fun <T> Iterable<T>.getFirst(predicate: (T) -> Boolean): T? {
-    for (element in this) if (predicate(element)) return@getFirst element
-    return null
+fun KProperty<*>.toJavaPropertyString() : String {
+    val returnClass = returnType.classifier as KClass<*>
+    val returnedType = StringBuilder()
+    if (returnClass.javaPrimitiveType != null && !isNullable()) {
+        returnedType.append(returnClass.javaPrimitiveType!!.simpleName)
+        return returnedType.toString()
+    } else {
+        returnedType.append(returnClass.javaObjectType.simpleName)
+    }
+    if (returnType.arguments.isNotEmpty()) {
+        returnedType.append("<")
+        val arguments = returnType.arguments
+        arguments.forEach {
+            val typeClass = it.type!!.classifier as KClass<*>
+            returnedType.append(typeClass.javaObjectType.simpleName)
+            if (arguments.indexOf(it) < arguments.size - 1) {
+                returnedType.append(", ")
+            }
+            returnedType.append(">")
+        }
+    }
+
+    return returnedType.toString()
 }
 
-inline fun <T> Array<T>.getFirst(predicate: (T) -> Boolean): T? {
+fun KProperty<*>.isMutable() : Boolean {
+    return this is KMutableProperty
+}
+
+inline fun <T> Iterable<T>.getFirst(predicate: (T) -> Boolean): T? {
     for (element in this) if (predicate(element)) return@getFirst element
     return null
 }
@@ -54,17 +78,36 @@ fun String.asSQLString() : String {
     }
 }
 
-fun <T>List<T>.elementsIsEqual(other: List<T>) : Boolean {
-    this.forEach {
-        if (!other.contains(it)) {
-            return@elementsIsEqual false
-        }
-    }
-    return true
+fun KClass<*>.getRequiredInConstructor() : List<KProperty<*>> {
+    return this.members.filter {
+        it is KProperty<*> && (it !is KMutableProperty<*> || !it.isNullable())
+    } as List<KProperty<*>>
 }
 
-fun Collection<KProperty<*>>.getRequiredInConstructor() : List<KProperty<*>> {
-    return this.filter {
-        it !is KMutableProperty<*> || !it.isNullable()
-    }
+fun KClass<*>.getVariables() : List<KProperty<*>> {
+    return this.members.filter {
+        it is KProperty<*>
+    } as List<KProperty<*>>
+}
+
+fun KClass<*>.getVariablesToOverride() : List<KProperty<*>> {
+    return this.members.filter {
+        it is KProperty<*> && it.isAbstract
+    } as List<KProperty<*>>
+}
+
+fun KClass<*>.getMethods() : List<KFunction<*>> {
+    return this.members.filter {
+        it is KFunction<*>
+    } as List<KFunction<*>>
+}
+
+fun KClass<*>.getMethodsToOverride() : List<KFunction<*>> {
+    return this.members.filter {
+        it is KFunction<*> && it.isAbstract
+    } as List<KFunction<*>>
+}
+
+fun KClass<*>.getPackage(): String {
+    return this.qualifiedName!!.removeSuffix(".${this.simpleName}")
 }

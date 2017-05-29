@@ -6,6 +6,10 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Ex
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import kotlin.reflect.*
+import jdk.nashorn.internal.codegen.CompilerConstants.className
+import net.openhft.compiler.CompilerUtils
+
+
 
 private val providerVariableName = "provider"
 
@@ -203,7 +207,7 @@ object OperationsCompiler {
         return compiledMap[what] as Class<T>
     }
 
-    private fun <T : Any> compile(whereFrom: KClass<in T>) : Class<out T> {
+    private fun <O : Any> compile(whereFrom: KClass<in O>) : Class<out O> {
         if (!whereFrom.isAbstract) {
             throw IllegalArgumentException("Can't override not abstract class: nothing to override")
         }
@@ -225,7 +229,7 @@ object OperationsCompiler {
         }
 
         val headerBuilder = StringBuilder()
-                .append(packageTemplate(whereFrom.getPackage()))
+                .append("${packageTemplate(whereFrom.getPackage())}\n")
                 .append(preparedImports)
 
         variablesToOverride.forEach {
@@ -235,6 +239,10 @@ object OperationsCompiler {
             addImports(it, headerBuilder)
         }
 
-        TODO()
+        val aClass = CompilerUtils.CACHED_COMPILER.loadFromJava(
+                interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),
+                classImplementatorTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName))
+
+        return aClass as Class<out O>
     }
 }

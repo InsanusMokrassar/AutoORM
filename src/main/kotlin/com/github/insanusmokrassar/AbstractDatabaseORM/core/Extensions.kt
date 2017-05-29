@@ -1,10 +1,11 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.instanceParameter
 
-fun <T>KProperty<T>.intsancesKClass() : KClass<*>{
+fun <T>KCallable<T>.intsancesKClass() : KClass<*>{
     return this.instanceParameter?.type?.classifier as KClass<*>
 }
 

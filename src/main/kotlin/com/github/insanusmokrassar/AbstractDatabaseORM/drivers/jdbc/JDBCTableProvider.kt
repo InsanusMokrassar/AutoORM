@@ -7,12 +7,23 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 class JDBCTableProvider<M : Any, O : M>(
-        targetClass: KClass<M>,
+        modelClass: KClass<M>,
         operationsClass: KClass<in O>,
         val connection: Connection)
     : AbstractTableProvider<M, O>(
-        targetClass,
+        modelClass,
         operationsClass) {
+
+    init {
+        val checkStatement = connection.prepareStatement("SELECT * FROM information_schema.tables WHERE table_name='${modelClass.simpleName}';")
+        val resultSet = checkStatement.executeQuery()
+        if (resultSet.next()) {
+            TODO()
+        } else {
+            TODO()
+        }
+    }
+
     override fun remove(where: SearchQueryCompiler<out Any>): Boolean {
         if (where is JDBCSearchQueryCompiler) {
             val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName}${where.compileQuery()}${where.compilePaging()};")

@@ -56,32 +56,3 @@ class ObjectDeclaration (val source: KClass<*>) {
         toReturn
     }()
 }
-
-fun KCallable<*>.isNullable() : Boolean {
-    return this.returnType.isMarkedNullable
-}
-
-fun KCallable<*>.returnClass() : KClass<*> {
-    return this.returnType.classifier as KClass<*>
-}
-
-fun <T>KCallable<T>.isField() : Boolean {
-    return this is KProperty<T>
-}
-
-fun <T>KCallable<T>.isFunction() : Boolean {
-    return this is KFunction<T>
-}
-
-fun KCallable<*>.isReturnNative() : Boolean {
-    return nativeTypes.contains(this.returnClass())
-}
-
-fun KProperty<*>.isPrimaryField() : Boolean {
-    this.annotations.forEach {
-        if (it.annotationClass == PrimaryKey::class) {
-            return@isPrimaryField true
-        }
-    }
-    return false
-}

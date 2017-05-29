@@ -2,6 +2,7 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.inte
 
 interface SearchQueryCompiler<Out : Any> {
     fun setNeededFields(vararg fieldNames : String) : SearchQueryCompiler<Out>
+    fun setNeededFields(fieldNames: List<String>): SearchQueryCompiler<Out>
 
     fun field(name : String, isOut : Boolean = false) : SearchQueryCompiler<Out>
 

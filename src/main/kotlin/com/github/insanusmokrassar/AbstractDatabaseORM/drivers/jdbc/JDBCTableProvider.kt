@@ -44,11 +44,13 @@ class JDBCTableProvider<M : Any, O : M>(
         modelClass,
         operationsClass) {
 
+    protected val primaryField : KProperty<*>?
+
     init {
         val declaration = getObjectDeclaration(modelClass)
 
         val fieldsBuilder = StringBuilder()
-        val primaryField = declaration.fields.getFirst {
+        primaryField = declaration.fields.getFirst {
             it.isPrimaryField()
         }
         declaration.fields.forEach {
@@ -91,6 +93,7 @@ class JDBCTableProvider<M : Any, O : M>(
 
     override fun find(where: SearchQueryCompiler<out Any>): Collection<O> {
         if (where is JDBCSearchQueryCompiler) {
+            checkSearchCompileQuery(where)
             val queryBuilder = StringBuilder().append("SELECT ")
             if (where.getFields == null) {
                 queryBuilder.append("* ")
@@ -107,15 +110,15 @@ class JDBCTableProvider<M : Any, O : M>(
             val resultSet = connection.prepareStatement(queryBuilder.toString()).executeQuery()
             val result = ArrayList<O>()
             while (resultSet.next()) {
-                val currentValuesMap = HashMap<KProperty<*>, Any>()
+                val currentValuesMap = HashMap<String, Any>()
                 if (where.getFields == null) {
                     variablesMap.values.forEach {
-                        currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
+                        currentValuesMap.put(it.name, resultSet.getObject(it.name, it.returnClass().java))
                     }
                 } else {
                     where.getFields!!.forEach {
                         val currentProperty = variablesMap[it]!!
-                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().java))
+                        currentValuesMap.put(currentProperty.name, resultSet.getObject(it, currentProperty.returnClass().java))
                     }
                 }
                 result.add(createModelFromValuesMap(currentValuesMap))
@@ -163,6 +166,12 @@ class JDBCTableProvider<M : Any, O : M>(
             return statement.execute()
         } else {
             throw IllegalArgumentException("JDBC provider can't handle query compiler of other providers")
+        }
+    }
+
+    protected fun checkSearchCompileQuery(query : JDBCSearchQueryCompiler) {
+        if (primaryField != null && query.getFields != null && !query.getFields!!.contains(primaryField.name)) {
+            query.setNeededFields(query.getFields!!.plus(primaryField.name))
         }
     }
 }

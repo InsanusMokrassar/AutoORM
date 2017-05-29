@@ -25,6 +25,11 @@ abstract class AbstractSearchQueryCompiler<T : Any> : SearchQueryCompiler<T> {
         return this
     }
 
+    override fun setNeededFields(fieldNames: List<String>): SearchQueryCompiler<T> {
+        getFields = fieldNames
+        return this
+    }
+
     override fun field(name: String, isOut : Boolean): SearchQueryCompiler<T> {
         if (currentFilter != null && !currentFilter!!.isComplete()) {
             throw IllegalStateException("Can't create next filter because last filter was not completed")

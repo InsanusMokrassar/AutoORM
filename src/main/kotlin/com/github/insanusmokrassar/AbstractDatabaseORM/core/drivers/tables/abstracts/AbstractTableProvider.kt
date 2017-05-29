@@ -1,12 +1,10 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.OperationsCompiler
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.*
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.getObjectDeclaration
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.intsancesKClass
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.isNullable
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 
 abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: KClass<M>, protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
@@ -19,6 +17,10 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         }
         futureMap
     }()
+
+    val constructorRequiredVariables : List<KProperty<*>> = ArrayList((variablesMap.filter {
+        it.value is KMutableProperty<*> || !it.value.isNullable()
+    }.values))
 
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 
@@ -48,9 +50,23 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         return values
     }
 
-    protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
-        val realisationClass = OperationsCompiler.getRealisation(operationsClass)
-        TODO()
+    protected fun createModelFromValuesMap(values : Map<String, Any>): O {
+        val realisationClass = OperationsCompiler.getRealisation(operationsClass).kotlin
+        if (realisationClass.constructors.isEmpty()) {
+            throw IllegalStateException("For some of reason, can't create correct realisation of model")
+        } else {
+            val resultModelConstructor = realisationClass.constructors.getFirst {
+                TODO("Need to write founding constructor")
+            }?:throw IllegalStateException("For some of reason, can't create correct realisation of model")
+            val paramsList = ArrayList<Any?>()
+            resultModelConstructor.parameters.forEach {
+                paramsList.add(
+                        values[it.name]
+                )
+            }
+            val result = resultModelConstructor.call(paramsList)
+            TODO("Need to write sets for created object")
+            return result
+        }
     }
-
 }

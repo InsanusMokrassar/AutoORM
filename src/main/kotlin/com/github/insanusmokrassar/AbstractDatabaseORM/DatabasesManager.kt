@@ -9,7 +9,7 @@ import kotlin.reflect.full.isSuperclassOf
 class DatabaseManager(config : IObject<Any>) {
 
     private val databaseDrivers: MutableMap<String, DatabaseDriver> = HashMap()
-    private val databases: MutableMap<String, DatabaseConnect> = HashMap()
+    private val databaseConnections: MutableMap<String, DatabaseConnect> = HashMap()
     private val driversConfigs: List<IObject<Any>> = config.get<List<Any>>("drivers").filter {
         it is IObject<*>
     } as List<IObject<Any>>
@@ -18,17 +18,20 @@ class DatabaseManager(config : IObject<Any>) {
     } as List<IObject<Any>>
 
     fun getDatabaseConnect(name: String) : DatabaseConnect {
-        if (databases.containsKey(name)) {
-            return databases[name]!!
+        if (databaseConnections.containsKey(name)) {
+            val connect = databaseConnections[name]!!
+            if (connect.closed) {
+                databaseConnections.remove(name)
+                return getDatabaseConnect(name)
+            }
+            return connect
         } else {
             val config = databasesConfigs.getFirst {
                 it.get<String>("name") == name
             }?: throw IllegalArgumentException("Can't find config for database $name")
             val driver = getDatabaseDriver(config.get("driver"))
             val connect = driver.getDatabaseConnect(config.get("config"))
-            if (config.get("cache")) {
-                databases.put(name, connect)
-            }
+            databaseConnections.put(name, connect)
             return connect
         }
     }

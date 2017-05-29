@@ -45,11 +45,6 @@ class JDBCTableProvider<M : Any, O : M>(
         operationsClass) {
 
     init {
-//        val checkStatement = connection.prepareStatement("SELECT * FROM information_schema.tables WHERE table_name='${modelClass.simpleName}';")
-//        val resultSet = checkStatement.executeQuery()
-//        if (resultSet.next()) {
-//            TODO()
-//        } else {
         val declaration = getObjectDeclaration(modelClass)
 
         val fieldsBuilder = StringBuilder()
@@ -82,17 +77,11 @@ class JDBCTableProvider<M : Any, O : M>(
             Logger.getGlobal().throwing(this::class.simpleName, "init", e)
             throw IllegalArgumentException("Can't create table ${declaration.name}", e)
         }
-//        val lastCheckStatement = connection.prepareStatement("SELECT * FROM information_schema.tables WHERE table_name='${modelClass.simpleName}';")
-//        val lastResultSet = lastCheckStatement.executeQuery()
-//        if (!lastResultSet.next()) {
-//            throw IllegalStateException("For some of reason I can't create table")
-//        }
-//        }
     }
 
     override fun remove(where: SearchQueryCompiler<out Any>): Boolean {
         if (where is JDBCSearchQueryCompiler) {
-            val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName}${where.compileQuery()}${where.compilePaging()};")
+            val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName} ${where.compileQuery()}${where.compilePaging()};")
             val statement = connection.prepareStatement(queryBuilder.toString())
             return statement.execute()
         } else{
@@ -102,25 +91,32 @@ class JDBCTableProvider<M : Any, O : M>(
 
     override fun find(where: SearchQueryCompiler<out Any>): Collection<O> {
         if (where is JDBCSearchQueryCompiler) {
-            val queryBuilder = StringBuilder().append("SELECT")
+            val queryBuilder = StringBuilder().append("SELECT ")
             if (where.getFields == null) {
-                queryBuilder.append(" * ")
+                queryBuilder.append("* ")
             } else {
                 where.getFields!!.forEach {
-                    queryBuilder.append(" $it")
+                    queryBuilder.append(it)
                     if (where.getFields!!.indexOf(it) < where.getFields!!.size - 1) {
                         queryBuilder.append(",")
                     }
                 }
             }
-            queryBuilder.append("${where.compileQuery()}${where.compilePaging()};")
+            queryBuilder.append(" FROM ${modelClass.simpleName} ${where.compileQuery()}${where.compilePaging()};")
 
             val resultSet = connection.prepareStatement(queryBuilder.toString()).executeQuery()
             val result = ArrayList<O>()
             while (resultSet.next()) {
                 val currentValuesMap = HashMap<KProperty<*>, Any>()
-                variablesList.forEach {
-                    currentValuesMap.put(it, resultSet.getObject(it.name, it.javaClass))
+                if (where.getFields == null) {
+                    variablesMap.values.forEach {
+                        currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
+                    }
+                } else {
+                    where.getFields!!.forEach {
+                        val currentProperty = variablesMap[it]!!
+                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().java))
+                    }
                 }
                 result.add(createModelFromValuesMap(currentValuesMap))
             }
@@ -135,18 +131,23 @@ class JDBCTableProvider<M : Any, O : M>(
     }
 
     override fun insert(values: Map<KProperty<*>, Any>): Boolean {
-        val queryBuilder = StringBuilder().append("INSERT INTO ${modelClass.simpleName} SET ")
-        values.forEach {
-            if (it.value is String) {
-                queryBuilder.append(" ${it.key.name} = ${(it.value as String).asSubstring()}")
+        val queryBuilder = StringBuilder().append("INSERT INTO ${modelClass.simpleName}")
+        val fieldsBuilder = StringBuilder()
+        val valuesBuilder = StringBuilder()
+        val valuesList = values.toList()
+        valuesList.forEach {
+            fieldsBuilder.append(it.first.name)
+            if (it.second is String) {
+                valuesBuilder.append((it.second as String).asSQLString())
             } else {
-                queryBuilder.append(" ${it.key.name} = ${it.value}")
+                valuesBuilder.append(it.second.toString())
             }
-            if (values.keys.indexOf(it.key) < values.size - 1) {
-                queryBuilder.append(",")
+            if (valuesList.indexOf(it) < valuesList.size - 1) {
+                fieldsBuilder.append(",")
+                valuesBuilder.append(",")
             }
         }
-        queryBuilder.append(";")
+        queryBuilder.append(" ($fieldsBuilder) VALUES ($valuesBuilder);")
         val statement = connection.prepareStatement(queryBuilder.toString())
         return statement.execute()
     }

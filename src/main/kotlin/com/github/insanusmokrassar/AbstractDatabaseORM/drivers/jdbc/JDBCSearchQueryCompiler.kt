@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.asSubstring
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.asSQLString
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts.AbstractSearchQueryCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.filters.Filter
 
@@ -11,12 +11,12 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.args[0] is String) {
-                        it.args[0] = (it.args[0] as String).asSubstring()
+                        it.args[0] = (it.args[0] as String).asSQLString()
                     }
                     if (it.isNot) {
-                        "${it.field} != ${it.args[0]}"
+                        "${it.field}!=${it.args[0]}"
                     } else {
-                        "${it.field} = ${it.args[0]}"
+                        "${it.field}=${it.args[0]}"
                     }
                 }
         ),
@@ -25,9 +25,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field} <= ${it.args[0]}"
+                        "${it.field}<=${it.args[0]}"
                     } else {
-                        "${it.field} > ${it.args[0]}"
+                        "${it.field}>${it.args[0]}"
                     }
                 }
         ),
@@ -36,9 +36,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field} < ${it.args[0]}"
+                        "${it.field}<${it.args[0]}"
                     } else {
-                        "${it.field} >= ${it.args[0]}"
+                        "${it.field}>=${it.args[0]}"
                     }
                 }
         ),
@@ -47,9 +47,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field} >= ${it.args[0]}"
+                        "${it.field}>=${it.args[0]}"
                     } else {
-                        "${it.field} < ${it.args[0]}"
+                        "${it.field}<${it.args[0]}"
                     }
                 }
         ),
@@ -58,9 +58,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field} > ${it.args[0]}"
+                        "${it.field}>${it.args[0]}"
                     } else {
-                        "${it.field} <= ${it.args[0]}"
+                        "${it.field}<=${it.args[0]}"
                     }
                 }
         ),
@@ -69,9 +69,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field} < ${it.args[0]} OR ${it.field} > ${it.args[1]}"
+                        "${it.field}<${it.args[0]}OR${it.field}>${it.args[1]}"
                     } else {
-                        "${it.field} >= ${it.args[0]} AND ${it.field} <= ${it.args[1]}"
+                        "${it.field}>=${it.args[0]}AND${it.field}<=${it.args[1]}"
                     }
                 }
         ),
@@ -82,13 +82,13 @@ private val operations = mapOf(
                     val localBuilder = StringBuilder()
                     if (filter.isNot) {
                         filter.args.forEach {
-                            localBuilder.append("${filter.field} != $it")
+                            localBuilder.append("${filter.field}!= $it")
                             if (filter.args.indexOf(it) < filter.args.size - 1) {
                                 localBuilder.append(" AND ")
                             }
                         }
                     } else {
-                        "${filter.field} >= ${filter.args[0]} AND ${filter.field} <= ${filter.args[1]}"
+                        "${filter.field}>=${filter.args[0]}AND${filter.field}<=${filter.args[1]}"
                     }
                 }
         )

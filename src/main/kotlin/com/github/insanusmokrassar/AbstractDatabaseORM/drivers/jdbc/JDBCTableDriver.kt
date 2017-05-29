@@ -9,4 +9,7 @@ class JDBCTableDriver(private val connection: Connection) : TableDriver {
     override fun <M : Any, O : M> getTableProvider(modelClass: KClass<M>, operationsClass: KClass<in O>): TableProvider<M, O> {
         return JDBCTableProvider(modelClass, operationsClass, connection)
     }
+    override fun close() {
+        connection.close()
+    }
 }

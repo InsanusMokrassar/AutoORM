@@ -1,23 +1,24 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts
 
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.OperationsCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.getObjectDeclaration
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.intsancesKClass
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.isNullable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
 abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: KClass<M>, protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
-    val variablesList: List<KProperty<*>> = {
-        val futureList = ArrayList<KProperty<*>>()
+    val variablesMap: Map<String, KProperty<*>> = {
+        val futureMap = HashMap<String, KProperty<*>>()
         modelClass.members.filter {
             it is KProperty<*>
         }.forEach {
-            futureList.add(it as KProperty<*>)
+            futureMap.put(it.name, it as KProperty<*>)
         }
-        futureList
+        futureMap
     }()
-
-    protected val idFieldName = "id"
 
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 
@@ -34,7 +35,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
     protected fun toValuesMap(what: M) : Map<KProperty<*>, Any> {
         val values = HashMap<KProperty<*>, Any>()
 
-        variablesList.filter {
+        variablesMap.values.filter {
             it.intsancesKClass() != Any::class && (!it.returnType.isMarkedNullable || it.call(what) != null)
         }.forEach {
             it.call(what)?.let { value ->
@@ -48,6 +49,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
     }
 
     protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
+        val realisationClass = OperationsCompiler.getRealisation(operationsClass)
         TODO()
     }
 

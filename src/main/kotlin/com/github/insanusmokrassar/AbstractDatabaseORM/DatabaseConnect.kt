@@ -9,6 +9,9 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
 class DatabaseConnect(private val driver: TableDriver, private val transactionManager: Transactable) : Transactable {
+    var closed = false
+    private set
+
     @Throws(IllegalArgumentException::class)
     fun <T : Any, M : Any, O : M> getTable(
             tableClass: KClass<T>,
@@ -34,5 +37,10 @@ class DatabaseConnect(private val driver: TableDriver, private val transactionMa
 
     override fun submit() {
         transactionManager.submit()
+    }
+
+    fun close() {
+        driver.close()
+        closed = true
     }
 }

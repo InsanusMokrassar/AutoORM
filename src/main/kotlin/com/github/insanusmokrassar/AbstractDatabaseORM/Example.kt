@@ -25,8 +25,9 @@ fun main(args: Array<String>) {
         configStringBuffer.append("$current\n\r")
     }
     val config = JSONIObject(configStringBuffer.toString())
-    val table = DatabaseManager(config).getDatabaseConnect("Example")
-            .getTable(ExampleTable::class, Example::class, ExampleOperations::class)
+    val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
+    val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
     table.insert(ExampleRealisation("Georgiy-San", "today"))
     table.findNameBirthdayWhereNameIs("Georgiy-San")
+    databaseConnect.close()
 }

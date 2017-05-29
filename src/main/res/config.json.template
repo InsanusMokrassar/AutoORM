@@ -14,11 +14,10 @@
       "name" : "Example",
       "driver" : "JDBCDriver",
       "config" : {
-        "username" : "",
+        "username" : "sa",
         "password" : "",
-        "url" : "jdbc:h2:mem:example"
-      },
-      "cache": false
+        "url" : "jdbc:h2:~/test"
+      }
     }
   ]
 }

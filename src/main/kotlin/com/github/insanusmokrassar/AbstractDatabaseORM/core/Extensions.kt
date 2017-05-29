@@ -2,7 +2,6 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 import kotlin.reflect.full.instanceParameter
 
 fun <T>KCallable<T>.intsancesKClass() : KClass<*>{
@@ -19,10 +18,10 @@ inline fun <T> Array<T>.getFirst(predicate: (T) -> Boolean): T? {
     return null
 }
 
-fun String.asSubstring() : String {
-    if (this.matches(Regex("^\".*\"$"))) {
+fun String.asSQLString() : String {
+    if (this.matches(Regex("^\'.*\'$"))) {
         return this
     } else {
-        return "\"$this\""
+        return "\'$this\'"
     }
 }

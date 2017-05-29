@@ -4,11 +4,16 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Ex
 import org.jetbrains.annotations.NotNull;
 
 public class ExampleRealisation implements Example {
-    protected Integer id;
-    public String name;
-    public String birthday;
+    public Integer id;
+    public final String name;
+    public final String birthday;
 
     protected Boolean invalid = false;
+
+    public ExampleRealisation(String name, String birthday) {
+        this.name = name;
+        this.birthday = birthday;
+    }
 
     @NotNull
     public String getName() {
@@ -24,5 +29,9 @@ public class ExampleRealisation implements Example {
             throw new IllegalStateException("Object is invalidated");
         }
         return birthday;
+    }
+
+    public Integer getId() {
+        return id;
     }
 }

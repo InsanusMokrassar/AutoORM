@@ -18,3 +18,11 @@ inline fun <T> Array<T>.getFirst(predicate: (T) -> Boolean): T? {
     for (element in this) if (predicate(element)) return@getFirst element
     return null
 }
+
+fun String.asSubstring() : String {
+    if (this.matches(Regex("^\".*\"$"))) {
+        return this
+    } else {
+        return "\"$this\""
+    }
+}

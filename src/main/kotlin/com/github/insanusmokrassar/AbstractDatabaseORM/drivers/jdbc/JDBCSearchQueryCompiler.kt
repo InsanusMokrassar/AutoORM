@@ -1,5 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc
 
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.asSubstring
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts.AbstractSearchQueryCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.filters.Filter
 
@@ -9,8 +10,8 @@ private val operations = mapOf(
                 "eq",
                 {
                     it: Filter ->
-                    if (it.args[0] is String && !(it.args[0] as String).matches(Regex("\".*\""))) {
-                        it.args[0] = "\"${it.args[0]}\""
+                    if (it.args[0] is String) {
+                        it.args[0] = (it.args[0] as String).asSubstring()
                     }
                     if (it.isNot) {
                         "${it.field} != ${it.args[0]}"

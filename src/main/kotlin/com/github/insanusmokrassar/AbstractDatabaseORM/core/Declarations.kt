@@ -4,7 +4,15 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.instanceParameter
+
+val nativeTypes = listOf(
+        Int::class,
+        Long::class,
+        Float::class,
+        Double::class,
+        String::class,
+        Boolean::class
+)
 
 private val compiledDeclarations = HashMap<KClass<*>, ObjectDeclaration>()
 
@@ -16,6 +24,8 @@ fun getObjectDeclaration(from : KClass<*>) : ObjectDeclaration {
 }
 
 class ObjectDeclaration (val source: KClass<*>) {
+    val name : String = source.simpleName!!
+
     val fields : List<KProperty<*>> = {
         val toReturn = ArrayList<KProperty<*>>()
         source.members.filter {
@@ -61,4 +71,17 @@ fun <T>KCallable<T>.isField() : Boolean {
 
 fun <T>KCallable<T>.isFunction() : Boolean {
     return this is KFunction<T>
+}
+
+fun KCallable<*>.isReturnNative() : Boolean {
+    return nativeTypes.contains(this.returnClass())
+}
+
+fun KProperty<*>.isPrimaryField() : Boolean {
+    this.annotations.forEach {
+        if (it.annotationClass == PrimaryKey::class) {
+            return@isPrimaryField true
+        }
+    }
+    return false
 }

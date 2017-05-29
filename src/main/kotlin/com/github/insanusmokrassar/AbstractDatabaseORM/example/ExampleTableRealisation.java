@@ -20,12 +20,16 @@ public class ExampleTableRealisation implements ExampleTable{
     }
 
     @NotNull
-    public List<Example> findNameBirthdayWhereNameIs(@NotNull String name) {
+    public List<ExampleOperations> findNameBirthdayWhereNameIs(@NotNull String name) {
         SearchQueryCompiler queryCompiler = provider.getEmptyQuery();
         queryCompiler.setNeededFields("name", "birthday");
         queryCompiler.field("name", false);
         queryCompiler.filter("eq", name);
         Collection<ExampleOperations> result = provider.find(queryCompiler);
-        return new ArrayList<Example>(result);
+        return new ArrayList<ExampleOperations>(result);
+    }
+
+    public void insert(@NotNull Example what) {
+        provider.insert(what);
     }
 }

@@ -17,6 +17,8 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         futureList
     }()
 
+    protected val idFieldName = "id"
+
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 
     override fun insert(what: M): Boolean {

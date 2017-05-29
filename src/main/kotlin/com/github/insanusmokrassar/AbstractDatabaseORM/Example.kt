@@ -1,5 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
+import com.github.insanusmokrassar.AbstractDatabaseORM.example.ExampleRealisation
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable
@@ -24,6 +25,8 @@ fun main(args: Array<String>) {
         configStringBuffer.append("$current\n\r")
     }
     val config = JSONIObject(configStringBuffer.toString())
-    DatabaseManager(config).getDatabaseConnect("Example")
-            .getTable(ExampleTable::class, Example::class, ExampleOperations::class).findNameBirthdayWhereNameIs("Georgiy-San")
+    val table = DatabaseManager(config).getDatabaseConnect("Example")
+            .getTable(ExampleTable::class, Example::class, ExampleOperations::class)
+    table.insert(ExampleRealisation("Georgiy-San", "today"))
+    table.findNameBirthdayWhereNameIs("Georgiy-San")
 }

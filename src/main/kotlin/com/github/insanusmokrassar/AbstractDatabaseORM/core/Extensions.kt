@@ -1,9 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
-import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KProperty
+import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 
 fun <T>KCallable<T>.intsancesKClass() : KClass<*>{
@@ -64,4 +61,10 @@ fun <T>List<T>.elementsIsEqual(other: List<T>) : Boolean {
         }
     }
     return true
+}
+
+fun Collection<KProperty<*>>.getRequiredInConstructor() : List<KProperty<*>> {
+    return this.filter {
+        it !is KMutableProperty<*> || !it.isNullable()
+    }
 }

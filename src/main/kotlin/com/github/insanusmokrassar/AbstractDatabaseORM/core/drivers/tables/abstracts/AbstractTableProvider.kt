@@ -18,9 +18,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         futureMap
     }()
 
-    val constructorRequiredVariables : List<KProperty<*>> = ArrayList((variablesMap.filter {
-        it.value is KMutableProperty<*> || !it.value.isNullable()
-    }.values))
+    val constructorRequiredVariables : List<KProperty<*>> = variablesMap.values.getRequiredInConstructor()
 
     abstract fun insert(values: Map<KProperty<*>, Any>): Boolean
 
@@ -50,22 +48,42 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         return values
     }
 
-    protected fun createModelFromValuesMap(values : Map<String, Any>): O {
+    protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
         val realisationClass = OperationsCompiler.getRealisation(operationsClass).kotlin
         if (realisationClass.constructors.isEmpty()) {
             throw IllegalStateException("For some of reason, can't create correct realisation of model")
         } else {
             val resultModelConstructor = realisationClass.constructors.getFirst {
-                TODO("Need to write founding constructor")
+                if (it.parameters.size != constructorRequiredVariables.size + 1) {
+                    return@getFirst false
+                }
+                for (i: Int in it.parameters.indices) {
+                    if (i < 1 || it.parameters[i].type.classifier != constructorRequiredVariables[i - 1].returnType.classifier) {
+                        if (i == 0) {
+                            if (it.parameters[i].type.classifier as KClass<*> != TableProvider::class) {
+                                return@getFirst false
+                            } else {
+                                continue
+                            }
+                        }
+                        return@getFirst false
+                    }
+                }
+                true
             }?:throw IllegalStateException("For some of reason, can't create correct realisation of model")
             val paramsList = ArrayList<Any?>()
-            resultModelConstructor.parameters.forEach {
+            paramsList.add(this)
+            constructorRequiredVariables.forEach {
                 paramsList.add(
-                        values[it.name]
+                        values[it]
                 )
             }
-            val result = resultModelConstructor.call(paramsList)
-            TODO("Need to write sets for created object")
+            val result = resultModelConstructor.call(*paramsList.toTypedArray())
+            values.keys.forEach {
+                if (!constructorRequiredVariables.contains(it)) {
+                    (it as KMutableProperty).setter.call(result, values[it])
+                }
+            }
             return result
         }
     }

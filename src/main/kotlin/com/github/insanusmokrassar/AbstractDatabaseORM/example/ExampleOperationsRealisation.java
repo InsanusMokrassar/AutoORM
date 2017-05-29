@@ -9,7 +9,7 @@ public class ExampleOperationsRealisation extends ExampleRealisation implements 
 
     protected final TableProvider<Example, ExampleOperations> provider;
 
-    public ExampleOperationsRealisation(TableProvider<Example, ExampleOperations> provider, Integer id, String name, String birthday) {
+    public ExampleOperationsRealisation(TableProvider<Example, ExampleOperations> provider, String name, String birthday, Integer id) {
         super(name, birthday);
         this.id = id;
         this.provider = provider;

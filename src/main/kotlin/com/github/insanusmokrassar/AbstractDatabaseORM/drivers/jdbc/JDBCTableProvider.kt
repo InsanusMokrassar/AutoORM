@@ -110,15 +110,15 @@ class JDBCTableProvider<M : Any, O : M>(
             val resultSet = connection.prepareStatement(queryBuilder.toString()).executeQuery()
             val result = ArrayList<O>()
             while (resultSet.next()) {
-                val currentValuesMap = HashMap<String, Any>()
+                val currentValuesMap = HashMap<KProperty<*>, Any>()
                 if (where.getFields == null) {
                     variablesMap.values.forEach {
-                        currentValuesMap.put(it.name, resultSet.getObject(it.name, it.returnClass().java))
+                        currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
                     }
                 } else {
                     where.getFields!!.forEach {
                         val currentProperty = variablesMap[it]!!
-                        currentValuesMap.put(currentProperty.name, resultSet.getObject(it, currentProperty.returnClass().java))
+                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().java))
                     }
                 }
                 result.add(createModelFromValuesMap(currentValuesMap))

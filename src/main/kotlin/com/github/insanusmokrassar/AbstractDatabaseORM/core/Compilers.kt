@@ -78,8 +78,14 @@ private fun createConstructorForProperties(whatFrom: KClass<*>, properties: List
     val constructorBuilder = StringBuilder()
     constructorBuilder.append("public ${interfaceImplementerClassNameTemplate(whatFrom.simpleName!!)}(${TableProvider::class.toJavaPropertyString(false)} $providerVariableName")
     properties.forEach {
+        val nullablePrefix: String
+        if (it.isNullable()) {
+            nullablePrefix = "@${Nullable::class.simpleName}"
+        } else {
+            nullablePrefix = ""
+        }
         constructorBuilder.append(
-                ", ${it.toJavaPropertyString()} ${it.name}"
+                ", $nullablePrefix ${it.toJavaPropertyString()} ${it.name}"
         )
     }
 
@@ -198,16 +204,16 @@ private val methodsBodies = mapOf(
 )
 
 object OperationsCompiler {
-    private val compiledMap : MutableMap<KClass<out Any>, Class<out Any>> = HashMap()
+    private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
-    fun <T : Any> getRealisation(what : KClass<in T>) : Class<out T>  {
+    fun <O : Any> getRealisation(what : KClass<in O>) : KClass<out O>  {
         if (!compiledMap.containsKey(what)) {
             compiledMap.put(what, compile(what))
         }
-        return compiledMap[what] as Class<T>
+        return compiledMap[what] as KClass<out O>
     }
 
-    private fun <O : Any> compile(whereFrom: KClass<in O>) : Class<out O> {
+    private fun <O : Any> compile(whereFrom: KClass<in O>) : KClass<out O> {
         if (!whereFrom.isAbstract) {
             throw IllegalArgumentException("Can't override not abstract class: nothing to override")
         }
@@ -243,6 +249,6 @@ object OperationsCompiler {
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),
                 classImplementatorTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName))
 
-        return aClass as Class<out O>
+        return (aClass.kotlin as KClass<out O>)
     }
 }

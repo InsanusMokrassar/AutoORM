@@ -118,7 +118,7 @@ class JDBCTableProvider<M : Any, O : M>(
                 } else {
                     where.getFields!!.forEach {
                         val currentProperty = variablesMap[it]!!
-                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().java))
+                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().javaObjectType))
                     }
                 }
                 result.add(createModelFromValuesMap(currentValuesMap))

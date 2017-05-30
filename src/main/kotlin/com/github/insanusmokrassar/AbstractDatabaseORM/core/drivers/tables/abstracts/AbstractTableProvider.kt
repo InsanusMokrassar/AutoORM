@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
 
 abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: KClass<M>, protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
     val variablesMap: Map<String, KProperty<*>> = {
-        val futureMap = HashMap<String, KProperty<*>>()
+        val futureMap = LinkedHashMap<String, KProperty<*>>()
         modelClass.getVariables().forEach {
             futureMap.put(it.name, it)
         }
@@ -47,7 +47,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
     }
 
     protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
-        val realisationClass = OperationsCompiler.getRealisation(operationsClass).kotlin
+        val realisationClass = OperationsCompiler.getRealisation(operationsClass)
         if (realisationClass.constructors.isEmpty()) {
             throw IllegalStateException("For some of reason, can't create correct realisation of model")
         } else {

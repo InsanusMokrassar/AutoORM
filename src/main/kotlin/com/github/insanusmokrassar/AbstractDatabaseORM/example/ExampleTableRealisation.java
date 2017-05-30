@@ -22,7 +22,7 @@ public class ExampleTableRealisation implements ExampleTable{
     @NotNull
     public List<ExampleOperations> findNameBirthdayWhereNameIs(@NotNull String name) {
         SearchQueryCompiler queryCompiler = provider.getEmptyQuery();
-        queryCompiler.setNeededFields("name", "birthday");
+        queryCompiler.setNeededFields("name", "birthday", "old");
         queryCompiler.field("name", false);
         queryCompiler.filter("eq", name);
         Collection<ExampleOperations> result = provider.find(queryCompiler);

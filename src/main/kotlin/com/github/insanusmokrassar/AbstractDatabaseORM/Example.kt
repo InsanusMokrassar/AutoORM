@@ -1,6 +1,5 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.example.ExampleRealisation
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable
@@ -9,6 +8,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.*
 import java.util.logging.LogManager
+import java.util.logging.Logger
 
 fun main(args: Array<String>) {
     try {
@@ -27,7 +27,18 @@ fun main(args: Array<String>) {
     val config = JSONIObject(configStringBuffer.toString())
     val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
-    table.insert(ExampleRealisation("Georgiy-San", "today"))
-    table.findNameBirthdayWhereNameIs("Georgiy-San")
+    table.insert(object : Example {
+        override val id: Int? = null
+        override val name: String = "Tom"
+        override val birthday: String = "09.05.1995"
+        override var old: Int = 19
+    })
+    table.findNameBirthdayWhereNameIs("Tom").forEach {
+        Logger.getGlobal().info(it.toStringExample())
+    }
     databaseConnect.close()
+}
+
+fun Example.toStringExample(): String {
+    return "Example{id=$id, name=$name, birthday=$birthday, old=$old}"
 }

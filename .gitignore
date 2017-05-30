@@ -2,7 +2,7 @@
 out/*
 *.iml
 target
-log.txt
+log*.txt
 
 src/main/res/config.json
 *.lck

@@ -11,6 +11,7 @@ import java.util.logging.LogManager
 import java.util.logging.Logger
 
 fun main(args: Array<String>) {
+    val random = Random()
     try {
         FileInputStream(args[0]).use {
             LogManager.getLogManager().readConfiguration(it)
@@ -27,14 +28,20 @@ fun main(args: Array<String>) {
     val config = JSONIObject(configStringBuffer.toString())
     val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
-    table.insert(object : Example {
-        override val id: Int? = null
-        override val name: String = "Tom"
-        override val birthday: String = "09.05.1995"
-        override var old: Int = 19
-    })
-    table.findNameBirthdayWhereNameIs("Tom").forEach {
-        Logger.getGlobal().info(it.toStringExample())
+    for (i: Int in 0..100) {
+        var startTime = Date().time
+        for (j: Int in 0..100000) {
+            table.insert(object : Example {
+                override val id: Int? = null
+                override val name: String = "Tom"
+                override var old: Int = random.nextInt(100)
+                override val birthday: String = "09.05.${2017 - old}"
+            })
+        }
+        Logger.getGlobal().info("InsertTime: ${Date().time - startTime} ms")
+        startTime = Date().time
+        table.findNameBirthdayWhereNameIs("Tom")
+        Logger.getGlobal().info("SelectTime: ${Date().time - startTime} ms")
     }
     databaseConnect.close()
 }

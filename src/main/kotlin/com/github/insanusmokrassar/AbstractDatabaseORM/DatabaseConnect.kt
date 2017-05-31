@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.TablesCompiler
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.compilers.TablesCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableDriver
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.Transactable

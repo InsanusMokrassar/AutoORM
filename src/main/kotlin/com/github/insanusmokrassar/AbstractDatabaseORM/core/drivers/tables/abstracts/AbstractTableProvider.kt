@@ -1,6 +1,7 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.abstracts
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.*
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.compilers.OperationsCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.SearchQueryCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import kotlin.reflect.KClass

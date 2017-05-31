@@ -51,7 +51,7 @@ class ObjectDeclaration (val source: KClass<*>) {
         functions.filter {
             it.intsancesKClass() != Any::class
         }.forEach {
-            toReturn.add(it as KFunction<*>)
+            toReturn.add(it)
         }
         toReturn
     }()

@@ -2,7 +2,7 @@
   "drivers": [
     {
       "name" : "JDBCDriver",
-      "classpath" : "com.github.insanusmokrassar.AbstractDatabaseORM.drivers.jdbc.JDBCDatabaseDriver",
+      "classpath" : "com.github.insanusmokrassar.AutoORM.drivers.jdbc.JDBCDatabaseDriver",
       "config" : {
         "jdbcDriverPath" : "org.h2.Driver"
       },

@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.insanusmokrassar</groupId>
-    <artifactId>AbstractDatabaseORM</artifactId>
+    <artifactId>AutoORM</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>AbstractDatabaseORM</name>
+    <name>AutoORM</name>
     <description>Example of description (temporary)</description>
     <url>https://insanusmokrassar.github.io/AbstractDatabaseORM</url>
     <developers>
@@ -96,63 +96,65 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.github.insanusmokrassar.AbstractDatabaseORM.ExampleKt</mainClass>
+                            <mainClass>com.github.insanusmokrassar.AutoORM.ExampleKt</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-compiler-plugin</artifactId>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>compile</id>-->
-            <!--<phase>compile</phase>-->
-            <!--<goals>-->
-            <!--<goal>compile</goal>-->
-            <!--</goals>-->
-            <!--</execution>-->
-            <!--<execution>-->
-            <!--<id>testCompile</id>-->
-            <!--<phase>test-compile</phase>-->
-            <!--<goals>-->
-            <!--<goal>testCompile</goal>-->
-            <!--</goals>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-source-plugin</artifactId>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>attach-sources</id>-->
-            <!--<goals>-->
-            <!--<goal>jar</goal>-->
-            <!--</goals>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
-            <!--<version>2.10.4</version>-->
-            <!--<configuration>-->
-            <!--<show>public</show>-->
-            <!--</configuration>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<phase>package</phase>-->
-            <!--<configuration>-->
-            <!--<show>public</show>-->
-            <!--</configuration>-->
-            <!--<goals>-->
-            <!--<goal>javadoc</goal>-->
-            <!--<goal>jar</goal>-->
-            <!--</goals>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals> <goal>single</goal> </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.github.insanusmokrassar.AutoORM.ExampleKt</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                <show>public</show>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <configuration>
+                            <show>public</show>
+                        </configuration>
+                        <goals>
+                            <goal>javadoc</goal>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

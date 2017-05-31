@@ -6,6 +6,7 @@ import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.inter
 
 val supportedFilters = listOf(
         "eq",
+        "is",
         "gte",
         "gt",
         "lte",

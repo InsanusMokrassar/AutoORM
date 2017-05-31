@@ -2,8 +2,6 @@ package com.github.insanusmokrassar.AbstractDatabaseORM.core.compilers
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.*
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
-import com.github.insanusmokrassar.AbstractDatabaseORM.example.ExampleTableRealisation
-import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import kotlin.reflect.*

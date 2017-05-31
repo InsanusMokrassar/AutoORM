@@ -1,7 +1,9 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core.compilers
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.isLast
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.isNullable
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.returnClass
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.toJavaPropertyString
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -83,6 +85,10 @@ fun addImports(from: KParameter, to: StringBuilder) {
     }
 }
 
+fun addImports(from: KClass<*>, to: StringBuilder) {
+    to.append("${importTemplate(from.javaObjectType.canonicalName)}\n")
+}
+
 fun addImports(from: KTypeProjection, to: StringBuilder) {
     val currentImport = importTemplate((from.type as KClass<*>).javaObjectType.canonicalName)
     if (!to.contains(currentImport)) {
@@ -91,4 +97,24 @@ fun addImports(from: KTypeProjection, to: StringBuilder) {
     from.type?.arguments?.forEach {
         addImports(it, to)
     }
+}
+
+fun methodOverrideTemplate(method: KFunction<*>, methodBody: String, inInterface: Boolean= true): String {
+    val methodBuilder = StringBuilder()
+    if (!inInterface) {
+        methodBuilder.append("@${Override::class.simpleName}\n")
+    }
+    val params = method.parameters
+    methodBuilder.append("public ${method.returnClass().toJavaPropertyString(method.isNullable())} ${method.name}(")
+    params.forEach {
+        if (it.kind == KParameter.Kind.INSTANCE) {
+            return@forEach
+        }
+        methodBuilder.append("${it.type.toJavaPropertyString()} ${it.name}")
+        if (!params.isLast(it)) {
+            methodBuilder.append(", ")
+        }
+    }
+    methodBuilder.append(") {\n$methodBody}\n")
+    return methodBuilder.toString()
 }

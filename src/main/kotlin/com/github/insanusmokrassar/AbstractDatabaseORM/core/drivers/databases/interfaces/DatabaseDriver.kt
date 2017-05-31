@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.databases.interfaces
 
-import com.github.insanusmokrassar.AbstractDatabaseORM.DatabaseConnect
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.DatabaseConnect
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
 

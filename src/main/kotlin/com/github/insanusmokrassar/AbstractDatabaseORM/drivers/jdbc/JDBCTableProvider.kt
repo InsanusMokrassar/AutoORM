@@ -159,7 +159,14 @@ class JDBCTableProvider<M : Any, O : M>(
         if (where is JDBCSearchQueryCompiler) {
             val queryBuilder = StringBuilder().append("UPDATE ${modelClass.simpleName} SET ")
             values.forEach {
-                queryBuilder.append(" ${it.key.name} = ${it.value}")
+                if (it.value is String) {
+                    queryBuilder.append(" ${it.key.name}=\'${it.value}\'")
+                } else {
+                    queryBuilder.append(" ${it.key.name}=${it.value}")
+                }
+                if (!values.keys.isLast(it.key)) {
+                    queryBuilder.append(",")
+                }
             }
             queryBuilder.append("${where.compileQuery()}${where.compilePaging()};")
             val statement = connection.prepareStatement(queryBuilder.toString())

@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
-import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager.isNullable
+import kotlin.coroutines.experimental.EmptyCoroutineContext.plus
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 
@@ -52,7 +52,47 @@ fun KCallable<*>.toJavaPropertyString() : String {
     return returnedType.toString()
 }
 
+fun KType.toJavaPropertyString(printInvariants: Boolean = false) : String {
+    val returnClass = classifier as KClass<*>
+    val returnedType = StringBuilder()
+    if (returnClass.javaPrimitiveType != null) {
+        returnedType.append(returnClass.javaPrimitiveType!!.simpleName)
+        return returnedType.toString()
+    } else {
+        returnedType.append(returnClass.javaObjectType.simpleName)
+    }
+    val genericBuilder = StringBuilder()
+    if (arguments.isNotEmpty()) {
+        genericBuilder.append("<")
+        val arguments = arguments
+        arguments.forEach {
+            if (it.variance != KVariance.INVARIANT) {
+                val typeClass = it.type?.classifier as KClass<*>
+                genericBuilder.append(typeClass.javaObjectType.simpleName)
+                if (!arguments.isLast(it)) {
+                    genericBuilder.append(", ")
+                }
+            } else {
+                if (printInvariants) {
+                    genericBuilder.append(it.type.toString())
+                    if (!arguments.isLast(it)) {
+                        genericBuilder.append(", ")
+                    }
+                }
+            }
+            genericBuilder.append(">")
+        }
+    }
+    if (genericBuilder.toString() != "<>") {
+        returnedType.append(genericBuilder)
+    }
+    return returnedType.toString()
+}
+
 fun KClass<*>.toJavaPropertyString(isNullable: Boolean) : String {
+    if (this == Unit::class) {
+        return "void"
+    }
     val returnedType = StringBuilder()
     if (javaPrimitiveType != null && !isNullable) {
         returnedType.append(javaPrimitiveType!!.simpleName)
@@ -130,4 +170,30 @@ fun KClass<*>.getMethodsToOverride() : List<KFunction<*>> {
 
 fun KClass<*>.getPackage(): String {
     return this.qualifiedName!!.removeSuffix(".${this.simpleName}")
+}
+
+fun String.camelCaseWords(): List<String> {
+    val result = ArrayList<String>()
+    val current = StringBuilder()
+    this.forEach {
+        if (it.isUpperCase()) {
+            if (!current.isEmpty()) {
+                result.add(current.toString().toLowerCase())
+                current.clear()
+            }
+        }
+        current.append(it)
+    }
+    if (current.isNotEmpty()) {
+        result.add(current.toString().toLowerCase())
+    }
+    return result
+}
+
+fun StringBuilder.clear() {
+    replace(0, length, "")
+}
+
+fun <T>Collection<T>.isLast(what: T): Boolean {
+    return indexOf(what) == size - 1
 }

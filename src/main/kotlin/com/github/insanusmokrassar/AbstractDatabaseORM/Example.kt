@@ -1,5 +1,6 @@
 package com.github.insanusmokrassar.AbstractDatabaseORM
 
+import com.github.insanusmokrassar.AbstractDatabaseORM.core.DatabaseManager
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.Example
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleOperations
 import com.github.insanusmokrassar.AbstractDatabaseORM.example.UserInterfaces.ExampleTable
@@ -25,24 +26,22 @@ fun main(args: Array<String>) {
         val current : String = scanner.nextLine()
         configStringBuffer.append("$current\n\r")
     }
+    var startTime = Date().time
     val config = JSONIObject(configStringBuffer.toString())
     val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
-    for (i: Int in 0..100) {
-        var startTime = Date().time
-        for (j: Int in 0..100000) {
-            table.insert(object : Example {
+    table.updateWhereNameIsOrOldIn(
+            object: Example {
                 override val id: Int? = null
-                override val name: String = "Tom"
-                override var old: Int = random.nextInt(100)
-                override val birthday: String = "09.05.${2017 - old}"
-            })
-        }
-        Logger.getGlobal().info("InsertTime: ${Date().time - startTime} ms")
-        startTime = Date().time
-        table.findNameBirthdayWhereNameIs("Tom")
-        Logger.getGlobal().info("SelectTime: ${Date().time - startTime} ms")
-    }
+                override val name: String = "IAm"
+                override val birthday: String = "nothing"
+                override var old: Int = 101
+            },
+            "Gosha",
+            80,
+            100
+    )
+    Logger.getGlobal().info("SelectTime: ${Date().time - startTime} ms")
     databaseConnect.close()
 }
 

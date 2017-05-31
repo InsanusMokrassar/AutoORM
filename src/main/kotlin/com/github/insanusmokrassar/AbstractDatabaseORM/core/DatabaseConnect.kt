@@ -1,10 +1,9 @@
-package com.github.insanusmokrassar.AbstractDatabaseORM
+package com.github.insanusmokrassar.AbstractDatabaseORM.core
 
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.compilers.TablesCompiler
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableDriver
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AbstractDatabaseORM.core.drivers.tables.interfaces.Transactable
-import com.github.insanusmokrassar.AbstractDatabaseORM.core.getFirst
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -18,7 +17,7 @@ class DatabaseConnect(private val driver: TableDriver, private val transactionMa
             modelClass: KClass<M>,
             operationsClass: KClass<in O> = modelClass): T {
         val provider = driver.getTableProvider(modelClass, operationsClass)
-        val realisation = TablesCompiler.getRealisation(tableClass)
+        val realisation = TablesCompiler.getRealisation(tableClass, modelClass)
         val result = realisation.constructors.getFirst {
             it.parameters.size == 1 && (it.parameters[0].type.classifier as KClass<*>).isSubclassOf(TableProvider::class)
         }?.call(

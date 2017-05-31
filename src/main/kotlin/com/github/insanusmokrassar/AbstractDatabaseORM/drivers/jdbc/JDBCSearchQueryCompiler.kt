@@ -21,6 +21,20 @@ private val operations = mapOf(
                 }
         ),
         Pair(
+                "is",
+                {
+                    it: Filter ->
+                    if (it.args[0] is String) {
+                        it.args[0] = (it.args[0] as String).asSQLString()
+                    }
+                    if (it.isNot) {
+                        "${it.field}!=${it.args[0]}"
+                    } else {
+                        "${it.field}=${it.args[0]}"
+                    }
+                }
+        ),
+        Pair(
                 "gt",
                 {
                     it: Filter ->
@@ -69,9 +83,9 @@ private val operations = mapOf(
                 {
                     it: Filter ->
                     if (it.isNot) {
-                        "${it.field}<${it.args[0]}OR${it.field}>${it.args[1]}"
+                        "${it.field}<${it.args[0]} OR ${it.field}>${it.args[1]}"
                     } else {
-                        "${it.field}>=${it.args[0]}AND${it.field}<=${it.args[1]}"
+                        "${it.field}>=${it.args[0]} AND ${it.field}<=${it.args[1]}"
                     }
                 }
         ),

@@ -102,19 +102,25 @@ fun KClass<*>.toJavaPropertyString(isNullable: Boolean) : String {
     return returnedType.toString()
 }
 
-fun KClass<*>.getPrimaryFieldName() : KProperty<*>? {
-    this.members.forEach {
-        if (it is KProperty<*> && it.isPrimaryField()) {
-            return@getPrimaryFieldName it
-        }
+fun KClass<*>.getPrimaryFields() : List<KCallable<*>> {
+    return this.members.filter {
+        it is KProperty<*> && it.isPrimaryField()
     }
-    return null
 }
 
 fun KProperty<*>.isPrimaryField() : Boolean {
     this.annotations.forEach {
         if (it.annotationClass == PrimaryKey::class) {
             return@isPrimaryField true
+        }
+    }
+    return false
+}
+
+fun KProperty<*>.isAutoincrement() : Boolean {
+    this.annotations.forEach {
+        if (it.annotationClass == Autoincrement::class) {
+            return@isAutoincrement true
         }
     }
     return false
@@ -199,4 +205,12 @@ fun StringBuilder.clear() {
 
 fun <T>Collection<T>.isLast(what: T): Boolean {
     return indexOf(what) == size - 1
+}
+
+fun <T, R>Collection<T>.select(by: (T) -> R): List<R> {
+    val result = ArrayList<R>()
+    this.forEach {
+        result.add(by(it))
+    }
+    return result
 }

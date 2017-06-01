@@ -26,23 +26,49 @@ fun main(args: Array<String>) {
         val current : String = scanner.nextLine()
         configStringBuffer.append("$current\n\r")
     }
-    var startTime = Date().time
     val config = JSONIObject(configStringBuffer.toString())
     val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
-    table.updateWhereNameIsOrOldIn(
-            object: Example {
-                override val id: Int? = null
-                override val name: String = "IAm"
-                override val birthday: String = "nothing"
-                override var old: Int = 101
-            },
-            "Gosha",
-            80,
-            100
-    )
-    Logger.getGlobal().info("SelectTime: ${Date().time - startTime} ms")
-    databaseConnect.close()
+    try {
+        while(true) {
+            var startTime = Date().time
+            table.removeAll()
+            Logger.getGlobal().info("First Remove All Time: ${Date().time - startTime} ms")
+            startTime = Date().time
+            table.insert(
+                    object : Example {
+                        override val id: Int? = null
+                        override val name: String = "IAm"
+                        override val birthday: String = "nothing"
+                        override var old: Int = 101
+                    }
+            )
+            table.insert(
+                    object : Example {
+                        override val id: Int? = null
+                        override val name: String = "You are"
+                        override val birthday: String = "yesterday"
+                        override var old: Int = 109
+                    }
+            )
+            Logger.getGlobal().info("Two Inserts Time: ${Date().time - startTime} ms")
+            startTime = Date().time
+            table.updateWhereNameIsOrOldIn(
+                    object : Example {
+                        override val id: Int? = null
+                        override val name: String = "IAm"
+                        override val birthday: String = "nothing"
+                        override var old: Int = 101
+                    },
+                    "Gosha",
+                    80,
+                    100
+            )
+            Logger.getGlobal().info("UpdateTime: ${Date().time - startTime} ms")
+        }
+    } finally {
+        databaseConnect.close()
+    }
 }
 
 fun Example.toStringExample(): String {

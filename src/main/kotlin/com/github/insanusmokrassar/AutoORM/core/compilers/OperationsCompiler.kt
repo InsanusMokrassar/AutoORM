@@ -5,6 +5,7 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableP
 import net.openhft.compiler.CompilerUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -43,15 +44,26 @@ private fun overrideVariableTemplate(fieldProperty: KProperty<*>): String {
     return overrideBuilder.toString()
 }
 
+private fun primaryKeyFindBuilder(primaryFields: List<KCallable<*>>): String {
+    val findBuilder = StringBuilder()
+    primaryFields.forEach {
+        findBuilder.append(".field(\"${it.name}\", false).filter(\"eq\", ${it.name})")
+        if (!primaryFields.isLast(it)) {
+            findBuilder.append(".linkWithNext(\"and\")")
+        }
+    }
+    return findBuilder.toString()
+}
+
 private val methodsBodies = mapOf(
         Pair(
                 "refresh",
                 {
-                    whereFrom: KClass<*>, primaryFieldName: String ->
+                    whereFrom: KClass<*>, primaryFields: List<KCallable<*>> ->
                     val queryBuilder = StringBuilder()
                     queryBuilder
                             .append("public void refresh() {\n")
-                            .append("${whereFrom.simpleName} result = ((List<${whereFrom.simpleName}>) ${providerVariableName}.find(${providerVariableName}.getEmptyQuery().field(\"$primaryFieldName\", false).filter(\"eq\", $primaryFieldName))).get(0);\n")
+                            .append("${whereFrom.simpleName} result = ((List<${whereFrom.simpleName}>) $providerVariableName.find($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)})).get(0);\n")
                     whereFrom.getVariables().forEach {
                         if (it.isMutable()) {
                             queryBuilder.append("this.${it.name} = result.${it.name};\n")
@@ -63,33 +75,33 @@ private val methodsBodies = mapOf(
         Pair(
                 "update",
                 {
-                    whereFrom: KClass<*>, primaryFieldName: String ->
+                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
                     val queryBuilder = StringBuilder()
                     queryBuilder
                             .append("public void update() {\n")
-                            .append("${providerVariableName}.update(this, ${providerVariableName}.getEmptyQuery().field(\"$primaryFieldName\", false).filter(\"eq\", $primaryFieldName));\n")
+                            .append("$providerVariableName.update(this, $providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
                     queryBuilder.append("}")
                 }
         ),
         Pair(
                 "insert",
                 {
-                    whereFrom: KClass<*>, primaryFieldName: String ->
+                    _: KClass<*>, _: List<KCallable<*>> ->
                     val queryBuilder = StringBuilder()
                     queryBuilder
                             .append("public void insert() {\n")
-                            .append("${providerVariableName}.insert(this);\n")
+                            .append("$providerVariableName.insert(this);\n")
                     queryBuilder.append("}")
                 }
         ),
         Pair(
                 "remove",
                 {
-                    whereFrom: KClass<*>, primaryFieldName: String ->
+                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
                     val queryBuilder = StringBuilder()
                     queryBuilder
                             .append("public void remove() {\n")
-                            .append("${providerVariableName}.remove(${providerVariableName}.getEmptyQuery().field(\"$primaryFieldName\", false).filter(\"eq\", $primaryFieldName));\n")
+                            .append("$providerVariableName.remove($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
                     queryBuilder.append("}")
                 }
         )
@@ -112,7 +124,7 @@ object OperationsCompiler {
         val variablesToOverride = whereFrom.getVariablesToOverride()
         val methodsToOverride = whereFrom.getMethodsToOverride()
         val constructorVariables = whereFrom.getRequiredInConstructor()
-        val primaryFieldName = whereFrom.getPrimaryFieldName()?.name
+        val primaryFields = whereFrom.getPrimaryFields()
 
         val classBodyBuilder = StringBuilder()
         classBodyBuilder.append("${privateFieldTemplate(TableProvider::class, providerVariableName)}\n")
@@ -123,7 +135,7 @@ object OperationsCompiler {
         classBodyBuilder.append("${createConstructorForProperties(whereFrom, constructorVariables)}\n")
 
         methodsToOverride.forEach {
-            classBodyBuilder.append("${methodsBodies[it.name]!!(whereFrom, primaryFieldName!!)}\n")
+            classBodyBuilder.append("${methodsBodies[it.name]!!(whereFrom, primaryFields)}\n")
         }
 
         val headerBuilder = StringBuilder()

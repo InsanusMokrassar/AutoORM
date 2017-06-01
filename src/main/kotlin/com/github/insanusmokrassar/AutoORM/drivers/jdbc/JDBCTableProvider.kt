@@ -5,6 +5,7 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.Abstrac
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.SearchQueryCompiler
 import java.sql.Connection
 import java.util.logging.Logger
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.isSubclassOf
@@ -44,13 +45,13 @@ class JDBCTableProvider<M : Any, O : M>(
         modelClass,
         operationsClass) {
 
-    protected val primaryField : KProperty<*>?
+    protected val primaryFields: List<KCallable<*>>
 
     init {
         val declaration = getObjectDeclaration(modelClass)
 
         val fieldsBuilder = StringBuilder()
-        primaryField = declaration.fields.getFirst {
+        primaryFields = declaration.fields.filter {
             it.isPrimaryField()
         }
         declaration.fields.forEach {
@@ -59,7 +60,7 @@ class JDBCTableProvider<M : Any, O : M>(
                 if (!it.isNullable()) {
                     fieldsBuilder.append(" NOT NULL")
                 }
-                if (it == primaryField && primaryField.returnClass().isSubclassOf(Number::class)) {
+                if (primaryFields.contains(it) && it.isAutoincrement()) {
                     fieldsBuilder.append(" AUTO_INCREMENT")
                 }
             } else {
@@ -67,8 +68,15 @@ class JDBCTableProvider<M : Any, O : M>(
             }
             fieldsBuilder.append(", ")
         }
-        primaryField?.let {
-            fieldsBuilder.append("PRIMARY KEY (${primaryField.name})")
+        if (primaryFields.isNotEmpty()) {
+            fieldsBuilder.append("CONSTRAINT ${modelClass.simpleName}_PR_KEY PRIMARY KEY (")
+            primaryFields.forEach {
+                fieldsBuilder.append(it.name)
+                if (!primaryFields.isLast(it)) {
+                    fieldsBuilder.append(", ")
+                }
+            }
+            fieldsBuilder.append(")")
         }
 
         try {
@@ -177,8 +185,8 @@ class JDBCTableProvider<M : Any, O : M>(
     }
 
     protected fun checkSearchCompileQuery(query : JDBCSearchQueryCompiler) {
-        if (primaryField != null && query.getFields != null && !query.getFields!!.contains(primaryField.name)) {
-            query.setNeededFields(query.getFields!!.plus(primaryField.name))
+        if (primaryFields.isNotEmpty() && query.getFields != null && !query.getFields!!.containsAll(primaryFields.select({it.name}))) {
+            query.setNeededFields(query.getFields!!.plus(primaryFields.select({it.name})))
         }
     }
 }

@@ -33,25 +33,36 @@ fun main(args: Array<String>) {
         while(true) {
             var startTime = Date().time
             table.removeAll()
-            Logger.getGlobal().info("First Remove All Time: ${Date().time - startTime} ms")
+            Logger.getGlobal().info("Remove All time: ${Date().time - startTime} ms")
             startTime = Date().time
-            table.insert(
-                    object : Example {
-                        override val id: Int? = null
-                        override val name: String = "IAm"
-                        override val birthday: String = "nothing"
-                        override var old: Int = 101
-                    }
-            )
-            table.insert(
-                    object : Example {
-                        override val id: Int? = null
-                        override val name: String = "You are"
-                        override val birthday: String = "yesterday"
-                        override var old: Int = 109
-                    }
-            )
-            Logger.getGlobal().info("Two Inserts Time: ${Date().time - startTime} ms")
+            for (i: Int in 0..100000) {
+                table.insert(
+                        object : Example {
+                            override val id: Int? = null
+                            override val name: String = "IAm"
+                            override val birthday: String = "nothing"
+                            override var old: Int = random.nextInt(100)
+                        }
+                )
+            }
+            Logger.getGlobal().info("100000 inserts time: ${Date().time - startTime} ms")
+            startTime = Date().time
+            table.removeAll()
+            Logger.getGlobal().info("Remove all time: ${Date().time - startTime} ms")
+            startTime = Date().time
+            databaseConnect.start()
+            for (i: Int in 0..100000) {
+                table.insert(
+                        object : Example {
+                            override val id: Int? = null
+                            override val name: String = "IAm"
+                            override val birthday: String = "nothing"
+                            override var old: Int = random.nextInt(100)
+                        }
+                )
+            }
+            databaseConnect.submit()
+            Logger.getGlobal().info("100000 Inserts in transaction time: ${Date().time - startTime} ms")
             startTime = Date().time
             table.updateWhereNameIsOrOldIn(
                     object : Example {

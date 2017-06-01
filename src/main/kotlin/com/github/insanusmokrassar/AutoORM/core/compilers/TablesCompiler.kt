@@ -6,9 +6,7 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableP
 import net.openhft.compiler.CompilerUtils
 import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import java.util.logging.Logger
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
+import kotlin.reflect.*
 import kotlin.reflect.full.functions
 
 private val searchQueryName = "searchQuery"
@@ -54,68 +52,6 @@ private val operations = mapOf(
         Pair(
                 "delete",
                 "remove"
-        )
-)
-
-private val resultBuilders = mapOf(
-        Pair(
-                "find",
-                {
-                    tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    val builder = StringBuilder()
-                    builder.append("${constructSearchQuery(tableInterfaceClass, modelInterfaceClass, funcInfo)}\n")
-                    builder.append("${TableProvider::class.functions.getFirst { it.name=="find" }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.find($searchQueryName);\n")
-                    if (funcInfo.returnType.classifier as KClass<*> == List::class) {
-                        builder.append("return new ${ArrayList::class.java.simpleName}($resultName);\n")
-                    } else {
-                        if (funcInfo.returnType.classifier as KClass<*> != Unit::class && TableProvider::class.functions.getFirst { it.name=="find" }!!.returnClass() != funcInfo.returnType.classifier) {
-                            builder.append("return (${(funcInfo.returnType.classifier as KClass<*>).javaObjectType})$resultName.toArray()[0];\n")
-                        }
-                        if (TableProvider::class.functions.getFirst { it.name=="find" }!!.returnClass() != funcInfo.returnType.classifier) {
-                            builder.append("return $resultName;\n")
-                        }
-                    }
-                    builder.toString()
-                }
-        ),
-        Pair(
-                "update",
-                {
-                    tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    val builder = StringBuilder()
-                    val objectArg = funcInfo.argsStack.pop()
-                    builder.append("${constructSearchQuery(tableInterfaceClass, modelInterfaceClass, funcInfo)}\n")
-                    builder.append("${TableProvider::class.functions.getFirst { it.name=="update" }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.update(${objectArg.name}, $searchQueryName);\n")
-                    if (TableProvider::class.functions.getFirst { it.name=="update" }!!.returnClass() == funcInfo.returnType.classifier) {
-                        builder.append("return $resultName;\n")
-                    }
-                    builder.toString()
-                }
-        ),
-        Pair(
-                "insert",
-                {
-                    _: KClass<*>, _: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    val builder = StringBuilder()
-                    builder.append("${TableProvider::class.functions.getFirst { it.name=="insert" }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.insert(${funcInfo.argsStack.pop().name});\n")
-                    if (TableProvider::class.functions.getFirst { it.name=="insert" }!!.returnClass() == funcInfo.returnType.classifier) {
-                        builder.append("return $resultName;\n")
-                    }
-                    builder.toString()
-                }
-        ),
-        Pair(
-                "remove",
-                {
-                    tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    val builder = StringBuilder()
-                    builder.append("${constructSearchQuery(tableInterfaceClass, modelInterfaceClass, funcInfo)}\n")
-                    builder.append("${TableProvider::class.functions.getFirst { it.name=="remove" }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.remove($searchQueryName);\n")
-                    if (TableProvider::class.functions.getFirst { it.name=="remove" }!!.returnClass() == funcInfo.returnType.classifier) {
-                        builder.append("return $resultName;\n")
-                    }
-                    builder.toString()
-                }
         )
 )
 
@@ -176,6 +112,75 @@ private val linksWithNextCondition = listOf(
         "and"
 )
 
+private val whereIdentifiersAlgorithms = mapOf(
+        Pair(
+                "where",
+                {
+                    tableInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
+                    constructWhere(tableInterfaceClass, funcInfo)
+                }
+        ),
+        Pair(
+                "By",
+                {
+                    tableInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
+                    constructWhere(tableInterfaceClass, funcInfo)
+                }
+        )
+).plus(pagingIdentifiers)
+
+private fun resultResolver(from: KClass<*>, to: KClass<*>, resultVariable: String = resultName): String {
+    when(from) {
+        Collection::class -> when(to) {
+            List::class -> return "return new ${ArrayList::class.java.simpleName}($resultVariable);\n"
+            Boolean::class -> return "return !$resultVariable.isEmpty();\n"
+            Unit::class -> return ""
+            else -> "return (${to.javaObjectType.simpleName})$resultVariable.toArray()[0];\n"
+        }
+        to -> return "return $resultVariable;"
+        else -> when(to) {
+            Unit::class -> return ""
+            else -> return "return (${to.javaObjectType.simpleName}) $resultVariable;"
+        }
+    }
+    return ""
+}
+
+private fun resultBuilder(tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo, operationName: String): String {
+    val currentFunction = TableProvider::class.functions.getFirst{ it.name== operationName }!!
+    val functionParams = currentFunction.parameters.filter { it.kind != KParameter.Kind.INSTANCE }
+    val resultBuilder = StringBuilder()
+    resultBuilder.append("${TableProvider::class.functions.getFirst { it.name== operationName }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.$operationName(")
+    functionParams.forEach {
+        val classifier = it.type.classifier
+        when(classifier) {
+            SearchQueryCompiler::class -> resultBuilder.append(searchQueryName)
+            else -> {
+                if (classifier is KTypeParameter && classifier.variance == KVariance.INVARIANT) {
+                    resultBuilder.append(funcInfo.argsStack.pop().name)
+                }
+            }
+        }
+        if (!functionParams.isLast(it)) {
+            resultBuilder.append(", ")
+        }
+    }
+    resultBuilder.append(");\n")
+
+    resultBuilder.append(
+            resultResolver(
+                    TableProvider::class.functions.getFirst { it.name== operationName }!!.returnClass(),
+                    funcInfo.returnType.classifier as KClass<*>
+            )
+    )
+    val builder = StringBuilder()
+    if (functionParams.select({ it.type.classifier }).contains(SearchQueryCompiler::class)) {
+        builder.append("${constructSearchQuery(tableInterfaceClass, modelInterfaceClass, funcInfo)}\n")
+    }
+    builder.append(resultBuilder)
+    return builder.toString()
+}
+
 private fun constructWhere(tableInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo): String {
     val builder = StringBuilder()
     while (!funcInfo.nameStack.empty() && !pagingIdentifiers.containsKey(funcInfo.nameStack.peek())) {
@@ -209,23 +214,6 @@ private fun constructWhere(tableInterfaceClass: KClass<*>, funcInfo: OverrideFun
     return builder.toString()
 }
 
-private val whereIdentifiersAlgorithms = mapOf(
-        Pair(
-                "where",
-                {
-                    tableInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    constructWhere(tableInterfaceClass, funcInfo)
-                }
-        ),
-        Pair(
-                "By",
-                {
-                    tableInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo ->
-                    constructWhere(tableInterfaceClass, funcInfo)
-                }
-        )
-).plus(pagingIdentifiers)
-
 private fun constructSearchQuery(tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo): String {
     val neededFields = HashSet<String>()
     modelInterfaceClass.getRequiredInConstructor().forEach {
@@ -258,7 +246,7 @@ private fun constructSearchQuery(tableInterfaceClass: KClass<*>, modelInterfaceC
 
 private fun methodBodyBuilder(tableInterfaceClass: KClass<*>, modelInterfaceClass: KClass<*>, funcInfo: OverrideFunctionInfo): String {
     try {
-        return resultBuilders[operations[funcInfo.nameStack.pop()]]!!(tableInterfaceClass, modelInterfaceClass, funcInfo)
+        return resultBuilder(tableInterfaceClass, modelInterfaceClass, funcInfo, operations[funcInfo.nameStack.pop()]!!)
     } catch (e: NullPointerException) {
         throw IllegalStateException("Can't find operation for ${funcInfo.nameParts[0]} in function ${funcInfo.function.name}", e)
     }

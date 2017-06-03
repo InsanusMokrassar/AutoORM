@@ -2,6 +2,7 @@ package com.github.insanusmokrassar.AutoORM.core.compilers
 
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -296,7 +297,7 @@ fun resultResolver(from: KClass<*>, to: KClass<*>, resultVariable: String = resu
             List::class -> return "new ${ArrayList::class.java.simpleName}($resultVariable)"
             Boolean::class -> return "!$resultVariable.isEmpty()"
             Unit::class -> return ""
-            else -> "(${to.javaObjectType.simpleName})$resultVariable.toArray()[0]"
+            else -> return "(${to.javaObjectType.simpleName})$resultVariable.toArray()[0]"
         }
         to -> return resultVariable
         else -> when(to) {
@@ -304,7 +305,6 @@ fun resultResolver(from: KClass<*>, to: KClass<*>, resultVariable: String = resu
             else -> return "(${to.javaObjectType.simpleName}) $resultVariable"
         }
     }
-    return ""
 }
 
 fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, operationName: String): String {
@@ -363,4 +363,11 @@ fun methodOverrideTemplate(method: KFunction<*>, methodBody: String, inInterface
     }
     methodBuilder.append(") {\n$methodBody}\n")
     return methodBuilder.toString()
+}
+
+fun addStandardImports(headerBuilder: StringBuilder) {
+    addImports(Filter::class, headerBuilder)
+    addImports(ArrayList::class, headerBuilder)
+    addImports(Collection::class, headerBuilder)
+    addImports(SearchQueryCompiler::class, headerBuilder)
 }

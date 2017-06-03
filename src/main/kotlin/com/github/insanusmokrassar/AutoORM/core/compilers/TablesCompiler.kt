@@ -60,10 +60,7 @@ object TablesCompiler {
         methodsToOverride.forEach {
             addImports(it, headerBuilder)
         }
-        addImports(Filter::class, headerBuilder)
-        addImports(ArrayList::class, headerBuilder)
-        addImports(Collection::class, headerBuilder)
-        addImports(SearchQueryCompiler::class, headerBuilder)
+        addStandardImports(headerBuilder)
 
         methodsToOverride.forEach {
             val funcInfo = OverrideFunctionInfo(it)

@@ -12,6 +12,7 @@ import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.javaMethod
 
 private fun getterTemplate(fieldProperty: KProperty<*>): String {
     val overrideBuilder = StringBuilder()
@@ -75,12 +76,28 @@ private val methodsBodies = mapOf(
                         argsStack.push(it.name)
                     }
                     namesStack.push("where")
-                    methodOverrideTemplate(
-                            method,
+                    val methodBody = StringBuilder()
+                    methodBody.append(
                             constructSearchQuery(
                                     whereFrom,
                                     OverridePseudoInfo(namesStack, argsStack)
-                            ),
+                            )
+                    )
+                    methodBody.append("${whereFrom.simpleName} $resultName = ")
+                            .append(
+                                    resultResolver(
+                                            Collection::class,
+                                            whereFrom,
+                                            "$providerVariableName.find($searchQueryName)"
+                                    )
+                            )
+                            .append(";\n")
+                    whereFrom.getVariables().forEach {
+                        methodBody.append("this.${it.name} = $resultName.${it.getter.javaMethod!!.name}();\n")
+                    }
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
                             whereFrom.isInterface()
                     )
                 }
@@ -175,7 +192,7 @@ object OperationsCompiler {
         methodsToOverride.forEach {
             addImports(it, headerBuilder)
         }
-        addImports(Filter::class, headerBuilder)
+        addStandardImports(headerBuilder)
 
         val aClass = CompilerUtils.CACHED_COMPILER.loadFromJava(
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),

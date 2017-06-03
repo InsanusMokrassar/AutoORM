@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
             table.removeAll()
             Logger.getGlobal().info("Remove All time: ${Date().time - startTime} ms")
             startTime = Date().time
-            for (i: Int in 0..100000) {
+            for (i: Int in 0..1000) {
                 table.insert(
                         object : Example {
                             override val id: Int? = null
@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
             Logger.getGlobal().info("Remove all time: ${Date().time - startTime} ms")
             startTime = Date().time
             databaseConnect.start()
-            for (i: Int in 0..100000) {
+            for (i: Int in 0..1000) {
                 table.insert(
                         object : Example {
                             override val id: Int? = null
@@ -64,18 +64,20 @@ fun main(args: Array<String>) {
             databaseConnect.submit()
             Logger.getGlobal().info("100000 Inserts in transaction time: ${Date().time - startTime} ms")
             startTime = Date().time
-            table.updateWhereNameIsOrOldIn(
+            table.updateWhereNameIsAndOldIn(
                     object : Example {
                         override val id: Int? = null
                         override val name: String = "IAm"
                         override val birthday: String = "nothing"
                         override var old: Int = 101
                     },
-                    "Gosha",
+                    "IAm",
                     80,
                     100
             )
             Logger.getGlobal().info("UpdateTime: ${Date().time - startTime} ms")
+            table.findNameBirthdayWhereNameIs("IAm")[0].refresh()
+            return
         }
     } finally {
         databaseConnect.close()

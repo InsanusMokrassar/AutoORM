@@ -1,12 +1,16 @@
 package com.github.insanusmokrassar.AutoORM.core.compilers
 
 import com.github.insanusmokrassar.AutoORM.core.*
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import net.openhft.compiler.CompilerUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
 
 private fun getterTemplate(fieldProperty: KProperty<*>): String {
@@ -59,53 +63,76 @@ private val methodsBodies = mapOf(
         Pair(
                 "refresh",
                 {
-                    whereFrom: KClass<*>, primaryFields: List<KCallable<*>> ->
-                    val queryBuilder = StringBuilder()
-                    queryBuilder
-                            .append("public void refresh() {\n")
-                            .append("${whereFrom.simpleName} result = ((List<${whereFrom.simpleName}>) $providerVariableName.find($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)})).get(0);\n")
-                    whereFrom.getVariables().forEach {
-                        if (it.isMutable()) {
-                            queryBuilder.append("this.${it.name} = result.${it.name};\n")
+                    method: KFunction<*>, whereFrom: KClass<*>, primaryFields: List<KCallable<*>> ->
+                    val namesStack = Stack<String>()
+                    val argsStack = Stack<String>()
+                    primaryFields.forEach {
+                        namesStack.push("is")
+                        namesStack.push(it.name)
+                        if (!primaryFields.isLast(it)) {
+                            namesStack.push("and")
                         }
+                        argsStack.push(it.name)
                     }
-                    queryBuilder.append("}")
-                }
-        ),
-        Pair(
-                "update",
-                {
-                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
-                    val queryBuilder = StringBuilder()
-                    queryBuilder
-                            .append("public void update() {\n")
-                            .append("$providerVariableName.update(this, $providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
-                    queryBuilder.append("}")
-                }
-        ),
-        Pair(
-                "insert",
-                {
-                    _: KClass<*>, _: List<KCallable<*>> ->
-                    val queryBuilder = StringBuilder()
-                    queryBuilder
-                            .append("public void insert() {\n")
-                            .append("$providerVariableName.insert(this);\n")
-                    queryBuilder.append("}")
-                }
-        ),
-        Pair(
-                "remove",
-                {
-                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
-                    val queryBuilder = StringBuilder()
-                    queryBuilder
-                            .append("public void remove() {\n")
-                            .append("$providerVariableName.remove($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
-                    queryBuilder.append("}")
+                    namesStack.push("where")
+                    methodOverrideTemplate(
+                            method,
+                            constructSearchQuery(
+                                    whereFrom,
+                                    OverridePseudoInfo(namesStack, argsStack)
+                            ),
+                            whereFrom.isInterface()
+                    )
                 }
         )
+//        Pair(
+//                "update",
+//                {
+//                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
+//                    val queryBuilder = StringBuilder()
+//                    queryBuilder
+//                            .append("public void update() {\n")
+//                            .append("$providerVariableName.update(this, $providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
+//                    queryBuilder.append("}")
+//                }
+//        ),
+//        Pair(
+//                "insert",
+//                {
+//                    _: KClass<*>, _: List<KCallable<*>> ->
+//                    val queryBuilder = StringBuilder()
+//                    queryBuilder
+//                            .append("public void insert() {\n")
+//                            .append("$providerVariableName.insert(this);\n")
+//                    queryBuilder.append("}")
+//                }
+//        ),
+//        Pair(
+//                "remove",
+//                {
+//                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
+//                    val queryBuilder = StringBuilder()
+//                    queryBuilder
+//                            .append("public void remove() {\n")
+//                            .append("$providerVariableName.remove($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
+//                    queryBuilder.append("}")
+//                }
+//        )
 )
+
+private class OverridePseudoInfo(val presetNames: Stack<String>, val presetArgsNames: Stack<String>, override val returnClass: KClass<*> = Unit::class): OverrideInfo {
+    override val nameStack: Stack<String> = Stack()
+    override val argsNamesStack: Stack<String> = Stack()
+    init {
+        refreshStacks()
+    }
+
+    override fun refreshStacks() {
+        nameStack.addAll(presetNames)
+        argsNamesStack.addAll(presetArgsNames)
+    }
+
+}
 
 object OperationsCompiler {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
@@ -135,7 +162,7 @@ object OperationsCompiler {
         classBodyBuilder.append("${createConstructorForProperties(whereFrom, constructorVariables)}\n")
 
         methodsToOverride.forEach {
-            classBodyBuilder.append("${methodsBodies[it.name]!!(whereFrom, primaryFields)}\n")
+            classBodyBuilder.append("${methodsBodies[it.name]!!(it, whereFrom, primaryFields)}\n")
         }
 
         val headerBuilder = StringBuilder()
@@ -148,6 +175,7 @@ object OperationsCompiler {
         methodsToOverride.forEach {
             addImports(it, headerBuilder)
         }
+        addImports(Filter::class, headerBuilder)
 
         val aClass = CompilerUtils.CACHED_COMPILER.loadFromJava(
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),

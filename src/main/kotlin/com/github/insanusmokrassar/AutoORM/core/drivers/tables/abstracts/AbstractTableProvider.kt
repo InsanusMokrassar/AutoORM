@@ -1,7 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts
 
 import com.github.insanusmokrassar.AutoORM.core.compilers.OperationsCompiler
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.SearchQueryCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AutoORM.core.getFirst
 import com.github.insanusmokrassar.AutoORM.core.getRequiredInConstructor

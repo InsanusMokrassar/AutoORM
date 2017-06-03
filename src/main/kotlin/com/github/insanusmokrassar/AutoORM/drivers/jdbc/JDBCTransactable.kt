@@ -20,6 +20,7 @@ class JDBCTransactable(private val connection: Connection) : Transactable {
             throw IllegalStateException("Transaction was not started")
         } else {
             connection.rollback(currentSavePoint)
+            connection.releaseSavepoint(currentSavePoint)
             currentSavePoint = null
             connection.autoCommit = true
         }
@@ -30,6 +31,7 @@ class JDBCTransactable(private val connection: Connection) : Transactable {
             throw IllegalStateException("Transaction was not started")
         } else {
             connection.commit()
+            connection.releaseSavepoint(currentSavePoint)
             currentSavePoint = null
             connection.autoCommit = true
         }

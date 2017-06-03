@@ -2,13 +2,12 @@ package com.github.insanusmokrassar.AutoORM.drivers.jdbc
 
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.AbstractTableProvider
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
 import java.sql.Connection
 import java.util.logging.Logger
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-import kotlin.reflect.full.isSubclassOf
 
 val nativeTypesMap = mapOf(
         Pair(
@@ -103,12 +102,12 @@ class JDBCTableProvider<M : Any, O : M>(
         if (where is JDBCSearchQueryCompiler) {
             checkSearchCompileQuery(where)
             val queryBuilder = StringBuilder().append("SELECT ")
-            if (where.getFields == null) {
+            if (where.fields == null) {
                 queryBuilder.append("* ")
             } else {
-                where.getFields!!.forEach {
+                where.fields!!.forEach {
                     queryBuilder.append(it)
-                    if (where.getFields!!.indexOf(it) < where.getFields!!.size - 1) {
+                    if (where.fields!!.indexOf(it) < where.fields!!.size - 1) {
                         queryBuilder.append(",")
                     }
                 }
@@ -119,12 +118,12 @@ class JDBCTableProvider<M : Any, O : M>(
             val result = ArrayList<O>()
             while (resultSet.next()) {
                 val currentValuesMap = HashMap<KProperty<*>, Any>()
-                if (where.getFields == null) {
+                if (where.fields == null) {
                     variablesMap.values.forEach {
                         currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
                     }
                 } else {
-                    where.getFields!!.forEach {
+                    where.fields!!.forEach {
                         val currentProperty = variablesMap[it]!!
                         currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().javaObjectType))
                     }
@@ -185,8 +184,8 @@ class JDBCTableProvider<M : Any, O : M>(
     }
 
     protected fun checkSearchCompileQuery(query : JDBCSearchQueryCompiler) {
-        if (primaryFields.isNotEmpty() && query.getFields != null && !query.getFields!!.containsAll(primaryFields.select({it.name}))) {
-            query.setNeededFields(query.getFields!!.plus(primaryFields.select({it.name})))
+        if (primaryFields.isNotEmpty() && !query.fields.containsAll(primaryFields.select({it.name}))) {
+            query.fields.addAll(primaryFields.select({it.name}))
         }
     }
 }

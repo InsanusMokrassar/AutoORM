@@ -1,8 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core.compilers
 
 import com.github.insanusmokrassar.AutoORM.core.*
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import net.openhft.compiler.CompilerUtils
 import org.jetbrains.kotlin.com.intellij.util.containers.Stack

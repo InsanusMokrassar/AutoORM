@@ -30,7 +30,13 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
     abstract fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<out Any>): Boolean
 
     override fun update(than: M, where: SearchQueryCompiler<out Any>): Boolean {
-        return update(toValuesMap(than), where)
+        var pairs = toValuesMap(than)
+        if (where.fields.isNotEmpty()) {
+            pairs = pairs.filter {
+                where.fields.contains(it.key.name)
+            }
+        }
+        return update(pairs, where)
     }
 
     protected fun toValuesMap(what: M) : Map<KProperty<*>, Any> {

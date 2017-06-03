@@ -162,7 +162,7 @@ class JDBCTableProvider<M : Any, O : M>(
         return statement.execute()
     }
 
-    override fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<out Any>): Boolean {
+    override fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<Any>): Boolean {
         if (where is JDBCSearchQueryCompiler) {
             val queryBuilder = StringBuilder().append("UPDATE ${modelClass.simpleName} SET ")
             values.forEach {

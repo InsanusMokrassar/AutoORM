@@ -48,7 +48,7 @@ class ObjectDeclaration (val source: KClass<*>) {
     val notAnyFunctions : List<KFunction<*>> = {
         val toReturn = ArrayList<KFunction<*>>()
         functions.filter {
-            it.intsancesKClass() != Any::class
+            it.intsanceKClass() != Any::class
         }.forEach {
             toReturn.add(it)
         }

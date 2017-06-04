@@ -5,7 +5,7 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableP
 import com.github.insanusmokrassar.AutoORM.core.getFirst
 import com.github.insanusmokrassar.AutoORM.core.getRequiredInConstructor
 import com.github.insanusmokrassar.AutoORM.core.getVariables
-import com.github.insanusmokrassar.AutoORM.core.intsancesKClass
+import com.github.insanusmokrassar.AutoORM.core.intsanceKClass
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
@@ -43,7 +43,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         val values = HashMap<KProperty<*>, Any>()
 
         variablesMap.values.filter {
-            it.intsancesKClass() != Any::class && (!it.returnType.isMarkedNullable || it.call(what) != null)
+            it.intsanceKClass() != Any::class && (!it.returnType.isMarkedNullable || it.call(what) != null)
         }.forEach {
             it.call(what)?.let { value ->
                 values.put(

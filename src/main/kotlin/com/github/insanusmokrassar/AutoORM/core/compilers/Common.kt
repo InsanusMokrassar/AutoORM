@@ -6,6 +6,7 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import java.util.logging.Logger
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
@@ -370,4 +371,70 @@ fun addStandardImports(headerBuilder: StringBuilder) {
     addImports(ArrayList::class, headerBuilder)
     addImports(Collection::class, headerBuilder)
     addImports(SearchQueryCompiler::class, headerBuilder)
+}
+
+fun getterTemplate(fieldProperty: KProperty<*>): String {
+    val overrideBuilder = StringBuilder()
+    if (!fieldProperty.isNullable()) {
+        overrideBuilder.append("@${NotNull::class.simpleName}\n")
+    } else {
+        overrideBuilder.append("@${Nullable::class.simpleName}\n")
+    }
+    overrideBuilder
+            .append("public ${fieldProperty.toJavaPropertyString()} get${fieldProperty.name[0].toUpperCase()}${fieldProperty.name.substring(1)}() {\n")
+            .append("    return ${fieldProperty.name};\n}")
+    return overrideBuilder.toString()
+}
+
+fun setterTemplate(fieldProperty: KProperty<*>): String {
+    val overrideBuilder = StringBuilder()
+    if (!fieldProperty.isNullable()) {
+        overrideBuilder.append("@${NotNull::class.simpleName}\n")
+    }
+    overrideBuilder
+            .append("public void set${fieldProperty.name[0].toUpperCase()}${fieldProperty.name.substring(1)}(${fieldProperty.toJavaPropertyString()} ${fieldProperty.name}) {\n")
+            .append("    this.${fieldProperty.name} = ${fieldProperty.name};\n}")
+    return overrideBuilder.toString()
+}
+
+fun overrideVariableTemplate(fieldProperty: KProperty<*>): String {
+    val overrideBuilder = StringBuilder()
+    overrideBuilder.append("${privateFieldTemplate(fieldProperty)}\n\n${getterTemplate(fieldProperty)}\n")
+
+    if (fieldProperty.isMutable()) {
+        overrideBuilder.append(setterTemplate(fieldProperty))
+    }
+
+    return overrideBuilder.toString()
+}
+
+fun primaryKeyFindBuilder(whereFrom: KClass<*>, primaryFields: List<KCallable<*>> = whereFrom.getPrimaryFields()): String {
+    val namesStack = Stack<String>()
+    val argsStack = Stack<String>()
+    primaryFields.forEach {
+        namesStack.push("is")
+        namesStack.push(it.name)
+        if (!primaryFields.isLast(it)) {
+            namesStack.push("and")
+        }
+        argsStack.push(it.name)
+    }
+    namesStack.push("where")
+    return constructSearchQuery(
+            whereFrom,
+            OverridePseudoInfo(namesStack, argsStack)
+    )
+}
+
+class OverridePseudoInfo(val presetNames: Stack<String>, val presetArgsNames: Stack<String>, override val returnClass: KClass<*> = Unit::class): OverrideInfo {
+    override val nameStack: Stack<String> = Stack()
+    override val argsNamesStack: Stack<String> = Stack()
+    init {
+        refreshStacks()
+    }
+
+    override fun refreshStacks() {
+        nameStack.addAll(presetNames)
+        argsNamesStack.addAll(presetArgsNames)
+    }
 }

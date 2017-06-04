@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core
 
-import org.jetbrains.kotlin.com.intellij.util.containers.Stack
+import java.util.*
 
 class ConnectionsPool(
         createConnectionsCallback: ((DatabaseConnect) -> Unit, (DatabaseConnect) -> Unit) -> List<DatabaseConnect>) {

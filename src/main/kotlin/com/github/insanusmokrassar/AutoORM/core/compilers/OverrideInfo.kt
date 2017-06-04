@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core.compilers
 
-import org.jetbrains.kotlin.com.intellij.util.containers.Stack
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 

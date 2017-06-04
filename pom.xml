@@ -33,7 +33,16 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.1.2-4</kotlin.version>
+        <dokka.version>0.9.14</dokka.version>
     </properties>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jcenter</id>
+            <name>JCenter</name>
+            <url>https://jcenter.bintray.com/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
         <resources>
@@ -136,24 +145,25 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-                <configuration>
-                <show>public</show>
-                </configuration>
+                <groupId>org.jetbrains.dokka</groupId>
+                <artifactId>dokka-maven-plugin</artifactId>
+                <version>${dokka.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <configuration>
-                            <show>public</show>
-                        </configuration>
                         <goals>
-                            <goal>javadoc</goal>
-                            <goal>jar</goal>
+                            <goal>dokka</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <outFormat>jekyll</outFormat>
+                    <reportNotDocumented>true</reportNotDocumented>
+                    <skipEmptyPackages>true</skipEmptyPackages>
+                    <sourceDirectories>
+                        <dir>${build.sourceDirectory}</dir>
+                    </sourceDirectories>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -167,11 +177,6 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-compiler-embeddable</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>

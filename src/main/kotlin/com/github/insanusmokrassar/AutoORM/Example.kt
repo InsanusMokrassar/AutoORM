@@ -73,10 +73,10 @@ fun main(args: Array<String>) {
                     },
                     "IAm",
                     80,
-                    100
+                    100,
             )
             Logger.getGlobal().info("UpdateTime: ${Date().time - startTime} ms")
-            table.findNameBirthdayWhereNameIs("IAm").forEach {
+            table.findNameBirthdayWhereNameIsOn("IAm", 0, 3).forEach {
                 it.name = "Bard"
                 it.update()
                 Logger.getGlobal().info(it.toStringExample())

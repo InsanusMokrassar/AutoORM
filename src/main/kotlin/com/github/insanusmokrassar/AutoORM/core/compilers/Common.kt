@@ -3,6 +3,7 @@ package com.github.insanusmokrassar.AutoORM.core.compilers
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.PageFilter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -10,11 +11,13 @@ import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import java.util.logging.Logger
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
+import kotlin.reflect.jvm.javaSetter
 
 val providerVariableName = "provider"
 
 val searchQueryName = "searchQuery"
 val filterName = "filter"
+val pageFilterName = "pageFilter"
 val resultName = "result"
 
 val operations = mapOf(
@@ -72,7 +75,19 @@ val pagingIdentifiers = mapOf(
                 "first",
                 {
                     _: OverrideInfo ->
-                    "$searchQueryName.getPageFilter();\n"
+                    "$searchQueryName.setPageFilter(new ${PageFilter::class.simpleName}());\n"
+                }
+        ),
+        Pair(
+                "on",
+                {
+                    it: OverrideInfo ->
+                    val pageFilterBuilder = StringBuilder()
+                    pageFilterBuilder.append("${PageFilter::class.simpleName} $pageFilterName = new ${PageFilter::class.simpleName}();\n")
+                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().getFirst { it.name == "page" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
+                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().getFirst { it.name == "size" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
+                    pageFilterBuilder.append("$searchQueryName.setPageFilter($pageFilterName);\n")
+                    pageFilterBuilder.toString()
                 }
         )
 )
@@ -181,7 +196,7 @@ fun createConstructorForProperties(whatFrom: KClass<*>, properties: List<KProper
 
     constructorBuilder
             .append(") {\n")
-            .append("this.${providerVariableName} = ${providerVariableName};\n")
+            .append("this.$providerVariableName = $providerVariableName;\n")
     properties.forEach {
         constructorBuilder.append("this.${it.name} = ${it.name};\n")
     }
@@ -233,13 +248,13 @@ fun constructWhere(funcInfo: OverrideInfo): String {
     while (!funcInfo.nameStack.empty() && !pagingIdentifiers.containsKey(funcInfo.nameStack.peek())) {
         val currentFilterBuilder = StringBuilder()
         if (filters.isEmpty()) {
-            currentFilterBuilder.append("Filter $filterName;")
+            currentFilterBuilder.append("${Filter::class.simpleName} $filterName;")
         }
         val fieldName = funcInfo.nameStack.pop()
         var filterOrOutField = funcInfo.nameStack.pop()
         val isOut = !filtersArgsCounts.keys.contains(filterOrOutField) && filterOrOutField != "not"
         currentFilterBuilder.append(
-                "$filterName = new Filter(\"$fieldName\", $isOut);\n"
+                "$filterName = new ${Filter::class.simpleName}(\"$fieldName\", $isOut);\n"
         )
         if (isOut) {
             filterOrOutField = funcInfo.nameStack.pop()
@@ -368,6 +383,7 @@ fun methodOverrideTemplate(method: KFunction<*>, methodBody: String, inInterface
 
 fun addStandardImports(headerBuilder: StringBuilder) {
     addImports(Filter::class, headerBuilder)
+    addImports(PageFilter::class, headerBuilder)
     addImports(ArrayList::class, headerBuilder)
     addImports(Collection::class, headerBuilder)
     addImports(SearchQueryCompiler::class, headerBuilder)

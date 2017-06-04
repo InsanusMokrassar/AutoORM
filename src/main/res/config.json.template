@@ -1,23 +1,24 @@
 {
   "drivers": [
     {
-      "name" : "JDBCDriver",
-      "classpath" : "com.github.insanusmokrassar.AutoORM.drivers.jdbc.JDBCDatabaseDriver",
-      "config" : {
-        "jdbcDriverPath" : "org.h2.Driver"
+      "name": "JDBCDriver",
+      "classpath": "com.github.insanusmokrassar.AutoORM.drivers.jdbc.JDBCDatabaseDriver",
+      "config": {
+        "jdbcDriverPath": "org.h2.Driver"
       },
       "cache": true
     }
   ],
-  "databases" : [
+  "databases": [
     {
-      "name" : "Example",
-      "driver" : "JDBCDriver",
-      "config" : {
-        "username" : "sa",
-        "password" : "",
-        "url" : "jdbc:h2:~/test;DB_CLOSE_ON_EXIT=FALSE"
-      }
+      "name": "Example",
+      "driver": "JDBCDriver",
+      "config": {
+        "username": "sa",
+        "password": "",
+        "url": "jdbc:h2:~/test;DB_CLOSE_ON_EXIT=FALSE"
+      },
+      "connections": 1
     }
   ]
 }

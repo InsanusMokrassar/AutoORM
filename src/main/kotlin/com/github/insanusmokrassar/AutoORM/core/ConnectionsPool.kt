@@ -2,7 +2,8 @@ package com.github.insanusmokrassar.AutoORM.core
 
 import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 
-class ConnectionsPool(createConnectionsCallback: ((DatabaseConnect) -> Unit) -> List<DatabaseConnect>) {
+class ConnectionsPool(
+        createConnectionsCallback: ((DatabaseConnect) -> Unit, (DatabaseConnect) -> Unit) -> List<DatabaseConnect>) {
     private val pool = Stack<DatabaseConnect>()
     private val allConnections: MutableList<DatabaseConnect> = ArrayList()
     private val lock = Object()
@@ -16,8 +17,17 @@ class ConnectionsPool(createConnectionsCallback: ((DatabaseConnect) -> Unit) -> 
         })
     }
 
+    private val onCloseDatabase: (DatabaseConnect) -> Unit = {
+        if (pool.contains(it)) {
+            pool.remove(it)
+        }
+        if (allConnections.contains(it)) {
+            allConnections.remove(it)
+        }
+    }
+
     init {
-        allConnections.addAll(createConnectionsCallback(onFree))
+        allConnections.addAll(createConnectionsCallback(onFree, onCloseDatabase))
         pool.addAll(allConnections)
     }
 
@@ -28,5 +38,11 @@ class ConnectionsPool(createConnectionsCallback: ((DatabaseConnect) -> Unit) -> 
             }
             return pool.pop()
         })
+    }
+
+    fun close() {
+        allConnections.forEach {
+            it.close()
+        }
     }
 }

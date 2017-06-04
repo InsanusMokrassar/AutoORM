@@ -12,7 +12,7 @@ class JDBCDatabaseDriver(parameters: IObject<Any>) : DatabaseDriver {
         val driver = parameters.get<String>("jdbcDriverPath")
         Class.forName(driver)
     }
-    override fun getDatabaseConnect(params: IObject<Any>, onFreeCallback: (DatabaseConnect) -> Unit): DatabaseConnect {
+    override fun getDatabaseConnect(params: IObject<Any>, onFreeCallback: (DatabaseConnect) -> Unit, onCloseCallback: (DatabaseConnect) -> Unit): DatabaseConnect {
         val connection = DriverManager.getConnection(
                 params.get("url"),
                 params.get("username"),
@@ -21,7 +21,8 @@ class JDBCDatabaseDriver(parameters: IObject<Any>) : DatabaseDriver {
         return DatabaseConnect(
                 JDBCTableDriver(connection),
                 JDBCTransactable(connection),
-                onFreeCallback
+                onFreeCallback,
+                onCloseCallback
         )
     }
 

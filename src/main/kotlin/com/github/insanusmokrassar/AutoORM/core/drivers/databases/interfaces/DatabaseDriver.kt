@@ -5,6 +5,6 @@ import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
 
 interface DatabaseDriver {
-    fun getDatabaseConnect(params: IObject<Any>, onFreeCallback: (DatabaseConnect) -> Unit) : DatabaseConnect
+    fun getDatabaseConnect(params: IObject<Any>, onFreeCallback: (DatabaseConnect) -> Unit, onCloseCallback: (DatabaseConnect) -> Unit) : DatabaseConnect
     fun supportTable(modelClass: KClass<*>) : Boolean
 }

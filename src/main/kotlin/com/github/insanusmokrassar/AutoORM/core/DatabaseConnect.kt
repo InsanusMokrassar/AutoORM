@@ -10,7 +10,8 @@ import kotlin.reflect.full.isSubclassOf
 class DatabaseConnect(
         private val driver: TableDriver,
         private val transactionManager: Transactable,
-        private val onFree: (DatabaseConnect) -> Unit = {}) : Transactable {
+        private val onFree: (DatabaseConnect) -> Unit = {},
+        private val onClose: (DatabaseConnect) -> Unit = {}) : Transactable {
 
     @Throws(IllegalArgumentException::class)
     fun <T : Any, M : Any, O : M> getTable(
@@ -47,5 +48,9 @@ class DatabaseConnect(
 
     fun free() {
         onFree(this)
+    }
+
+    fun close() {
+        onClose(this)
     }
 }

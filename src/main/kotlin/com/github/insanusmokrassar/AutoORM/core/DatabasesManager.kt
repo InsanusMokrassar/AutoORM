@@ -20,13 +20,16 @@ class DatabaseManager(config : com.github.insanusmokrassar.iobjectk.interfaces.I
             databaseConnections.put(
                     it.get<String>("name"),
                     ConnectionsPool {
+                        onFree: (DatabaseConnect) -> Unit,
+                        onClose: (DatabaseConnect) -> Unit ->
                         if (currentConfig.keys().contains("connections")) {
                             val connections = ArrayList<DatabaseConnect>()
                             for (i: Int in 0..currentConfig.get<Int>("connections") - 1) {
                                 connections.add(
                                         driver.getDatabaseConnect(
                                                 currentConfig.get("config"),
-                                                it
+                                                onFree,
+                                                onClose
                                         )
                                 )
                             }
@@ -34,7 +37,8 @@ class DatabaseManager(config : com.github.insanusmokrassar.iobjectk.interfaces.I
                         } else {
                             listOf(driver.getDatabaseConnect(
                                     currentConfig.get("config"),
-                                    it
+                                    onFree,
+                                    onClose
                             ))
                         }
                     }

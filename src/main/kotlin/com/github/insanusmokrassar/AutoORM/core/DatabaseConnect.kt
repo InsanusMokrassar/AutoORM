@@ -27,6 +27,12 @@ class DatabaseConnect(
         return result
     }
 
+    fun <M : Any, O : M> getTableProvider(
+            modelClass: KClass<M>,
+            operationsClass: KClass<in O> = modelClass): TableProvider<M, O> {
+        return driver.getTableProvider(modelClass, operationsClass)
+    }
+
     override fun start() {
         transactionManager.start()
     }

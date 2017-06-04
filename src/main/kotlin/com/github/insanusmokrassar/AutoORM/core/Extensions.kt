@@ -4,6 +4,18 @@ import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 
 /**
+ * List of classes which can be primitive
+ */
+val nativeTypes = listOf(
+        Int::class,
+        Long::class,
+        Float::class,
+        Double::class,
+        String::class,
+        Boolean::class
+)
+
+/**
  * @return Экземпляр KClass, содержащий данный KCallable объект.
  */
 fun <T>KCallable<T>.intsanceKClass() : KClass<*> {

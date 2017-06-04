@@ -157,7 +157,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outFormat>jekyll</outFormat>
+                    <outputFormat>gfm</outputFormat>
                     <reportNotDocumented>true</reportNotDocumented>
                     <skipEmptyPackages>true</skipEmptyPackages>
                     <sourceDirectories>

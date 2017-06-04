@@ -47,13 +47,10 @@ class JDBCTableProvider<M : Any, O : M>(
     protected val primaryFields: List<KCallable<*>>
 
     init {
-        val declaration = getObjectDeclaration(modelClass)
-
         val fieldsBuilder = StringBuilder()
-        primaryFields = declaration.fields.filter {
-            it.isPrimaryField()
-        }
-        declaration.fields.forEach {
+        primaryFields = modelClass.getPrimaryFields()
+
+        modelClass.getVariables().forEach {
             if (it.isReturnNative()) {
                 fieldsBuilder.append("${it.name} ${nativeTypesMap[it.returnClass()]}")
                 if (!it.isNullable()) {
@@ -79,12 +76,12 @@ class JDBCTableProvider<M : Any, O : M>(
         }
 
         try {
-            if (connection.prepareStatement("CREATE TABLE IF NOT EXISTS ${declaration.name} ($fieldsBuilder);").execute()) {
-                Logger.getGlobal().info("Table ${declaration.name} was created")
+            if (connection.prepareStatement("CREATE TABLE IF NOT EXISTS ${modelClass.simpleName} ($fieldsBuilder);").execute()) {
+                Logger.getGlobal().info("Table ${modelClass.simpleName} was created")
             }
         } catch (e: Exception) {
             Logger.getGlobal().throwing(this::class.simpleName, "init", e)
-            throw IllegalArgumentException("Can't create table ${declaration.name}", e)
+            throw IllegalArgumentException("Can't create table ${modelClass.simpleName}", e)
         }
     }
 

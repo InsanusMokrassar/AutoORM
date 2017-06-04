@@ -5,7 +5,7 @@ import kotlin.reflect.full.isSuperclassOf
 class DatabaseManager(config : com.github.insanusmokrassar.iobjectk.interfaces.IObject<Any>) {
 
     private val databaseDrivers: MutableMap<String, com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseDriver> = HashMap()
-    private val databaseConnections: MutableMap<String, DatabaseConnect> = HashMap()
+    val databaseConnections: MutableMap<String, ConnectionsPool> = HashMap()
     private val driversConfigs: List<com.github.insanusmokrassar.iobjectk.interfaces.IObject<Any>> = config.get<List<Any>>("drivers").filter {
         it is com.github.insanusmokrassar.iobjectk.interfaces.IObject<*>
     } as List<com.github.insanusmokrassar.iobjectk.interfaces.IObject<Any>>
@@ -13,22 +13,32 @@ class DatabaseManager(config : com.github.insanusmokrassar.iobjectk.interfaces.I
         it is com.github.insanusmokrassar.iobjectk.interfaces.IObject<*>
     } as List<com.github.insanusmokrassar.iobjectk.interfaces.IObject<Any>>
 
-    fun getDatabaseConnect(name: String) : DatabaseConnect {
-        if (databaseConnections.containsKey(name)) {
-            val connect = databaseConnections[name]!!
-            if (connect.closed) {
-                databaseConnections.remove(name)
-                return getDatabaseConnect(name)
-            }
-            return connect
-        } else {
-            val config = databasesConfigs.getFirst {
-                it.get<String>("name") == name
-            }?: throw IllegalArgumentException("Can't find config for database $name")
-            val driver = getDatabaseDriver(config.get("driver"))
-            val connect = driver.getDatabaseConnect(config.get("config"))
-            databaseConnections.put(name, connect)
-            return connect
+    init {
+        databasesConfigs.forEach {
+            val driver = getDatabaseDriver(it.get("driver"))
+            val currentConfig = it
+            databaseConnections.put(
+                    it.get<String>("name"),
+                    ConnectionsPool {
+                        if (currentConfig.keys().contains("connections")) {
+                            val connections = ArrayList<DatabaseConnect>()
+                            for (i: Int in 0..currentConfig.get<Int>("connections") - 1) {
+                                connections.add(
+                                        driver.getDatabaseConnect(
+                                                currentConfig.get("config"),
+                                                it
+                                        )
+                                )
+                            }
+                            connections
+                        } else {
+                            listOf(driver.getDatabaseConnect(
+                                    currentConfig.get("config"),
+                                    it
+                            ))
+                        }
+                    }
+            )
         }
     }
 

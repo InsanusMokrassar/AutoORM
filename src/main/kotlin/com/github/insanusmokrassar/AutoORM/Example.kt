@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
         configStringBuffer.append("$current\n\r")
     }
     val config = JSONIObject(configStringBuffer.toString())
-    val databaseConnect = DatabaseManager(config).getDatabaseConnect("Example")
+    val databaseConnect = DatabaseManager(config).databaseConnections["Example"]!!.getConnection()
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
     try {
         while(true) {
@@ -79,11 +79,12 @@ fun main(args: Array<String>) {
             table.findNameBirthdayWhereNameIs("IAm").forEach {
                 it.name = "Bard"
                 it.update()
+                Logger.getGlobal().info(it.toStringExample())
             }
             return
         }
     } finally {
-        databaseConnect.close()
+        databaseConnect.free()
     }
 }
 

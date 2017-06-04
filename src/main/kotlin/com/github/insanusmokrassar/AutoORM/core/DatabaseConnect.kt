@@ -7,9 +7,10 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.Transa
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
-class DatabaseConnect(private val driver: TableDriver, private val transactionManager: Transactable) : Transactable {
-    var closed = false
-    private set
+class DatabaseConnect(
+        private val driver: TableDriver,
+        private val transactionManager: Transactable,
+        private val onFree: (DatabaseConnect) -> Unit = {}) : Transactable {
 
     @Throws(IllegalArgumentException::class)
     fun <T : Any, M : Any, O : M> getTable(
@@ -38,8 +39,7 @@ class DatabaseConnect(private val driver: TableDriver, private val transactionMa
         transactionManager.submit()
     }
 
-    fun close() {
-        driver.close()
-        closed = true
+    fun free() {
+        onFree(this)
     }
 }

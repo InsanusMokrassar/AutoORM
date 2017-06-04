@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
         configStringBuffer.append("$current\n\r")
     }
     val config = JSONIObject(configStringBuffer.toString())
-    val databaseConnect = DatabaseManager(config).databaseConnections["Example"]!!.getConnection()
+    val databaseConnect = DatabaseManager(config).databasesPools["Example"]!!.getConnection()
     val table = databaseConnect.getTable(ExampleTable::class, Example::class, ExampleOperations::class)
     try {
         while(true) {

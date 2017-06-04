@@ -7,7 +7,7 @@ import kotlin.reflect.full.isSuperclassOf
 class DatabaseManager(config : IObject<Any>) {
 
     private val databaseDrivers: MutableMap<String, DatabaseDriver> = HashMap()
-    val databaseConnections: MutableMap<String, ConnectionsPool> = HashMap()
+    val databasesPools: Map<String, ConnectionsPool>
     private val driversConfigs: List<IObject<Any>> = config.get<List<Any>>("drivers").filter {
         it is IObject<*>
     } as List<IObject<Any>>
@@ -16,10 +16,11 @@ class DatabaseManager(config : IObject<Any>) {
     } as List<IObject<Any>>
 
     init {
+        val pools = HashMap<String, ConnectionsPool>()
         databasesConfigs.forEach {
             val driver = getDatabaseDriver(it.get("driver"))
             val currentConfig = it
-            databaseConnections.put(
+            pools.put(
                     it.get<String>("name"),
                     ConnectionsPool {
                         onFree: (DatabaseConnect) -> Unit,
@@ -46,6 +47,7 @@ class DatabaseManager(config : IObject<Any>) {
                     }
             )
         }
+        databasesPools = pools
     }
 
     private fun getDatabaseDriver(name: String) : DatabaseDriver {

@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
             databaseConnect.submit()
             Logger.getGlobal().info("100000 Inserts in transaction time: ${Date().time - startTime} ms")
             startTime = Date().time
-            table.updateWhereNameIsAndOldIn(
+            table.updateWhereNameIsAndOldInOrIdOneof(
                     object : Example {
                         override val id: Int? = null
                         override var name: String = "Bash"
@@ -74,6 +74,11 @@ fun main(args: Array<String>) {
                     "IAm",
                     80,
                     100,
+                    listOf(
+                            0,
+                            1,
+                            2
+                    )
             )
             Logger.getGlobal().info("UpdateTime: ${Date().time - startTime} ms")
             table.findNameBirthdayWhereNameIsOn("IAm", 0, 3).forEach {

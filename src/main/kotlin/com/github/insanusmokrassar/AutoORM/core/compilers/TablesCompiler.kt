@@ -6,7 +6,7 @@ import net.openhft.compiler.CompilerUtils
 import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import kotlin.reflect.*
 
-private class OverrideFunctionInfo(val function: KFunction<*>) : OverrideInfo{
+private class OverrideFunctionInfo(override val function: KFunction<*>) : OverrideInfo{
     val nameParts = function.name.camelCaseWords()
     val args = function.parameters
 

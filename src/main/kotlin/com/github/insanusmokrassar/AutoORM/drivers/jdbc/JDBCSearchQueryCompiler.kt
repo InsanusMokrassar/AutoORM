@@ -90,20 +90,24 @@ private val operations = mapOf(
                 }
         ),
         Pair(
-                "oneOf",
+                "oneof",
                 {
                     filter: Filter ->
                     val localBuilder = StringBuilder()
+                    val operator: String
                     if (filter.isNot) {
-                        filter.args.forEach {
-                            localBuilder.append("${filter.field}!= $it")
-                            if (filter.args.indexOf(it) < filter.args.size - 1) {
-                                localBuilder.append(" AND ")
-                            }
-                        }
+                        operator = "!="
                     } else {
-                        "${filter.field}>=${filter.args[0]}AND${filter.field}<=${filter.args[1]}"
+                        operator = "="
                     }
+                    localBuilder.append("(")
+                    filter.args.forEach {
+                        localBuilder.append("${filter.field}$operator$it")
+                        if (filter.args.indexOf(it) < filter.args.size - 1) {
+                            localBuilder.append(" OR ")
+                        }
+                    }
+                    localBuilder.append(")")
                 }
         )
 )

@@ -8,7 +8,7 @@ val supportedFilters = listOf(
         "lte",
         "lt",
         "in",
-        "oneOf"
+        "oneof"
 )
 
 class Filter(val field : String, val isOut : Boolean = false) {

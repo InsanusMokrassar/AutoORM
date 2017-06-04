@@ -8,9 +8,11 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableP
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import org.jetbrains.kotlin.com.intellij.util.containers.Stack
+import java.util.*
 import java.util.logging.Logger
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.javaSetter
 
 val providerVariableName = "provider"
@@ -122,7 +124,7 @@ val filtersArgsCounts = mapOf(
                 2
         ),
         Pair(
-                "oneOf",
+                "oneof",
                 1
         )
 )
@@ -181,7 +183,7 @@ fun privateFieldTemplate(fieldClass: KClass<*>, name: String): String {
 
 fun createConstructorForProperties(whatFrom: KClass<*>, properties: List<KProperty<*>>) : String {
     val constructorBuilder = StringBuilder()
-    constructorBuilder.append("public ${interfaceImplementerClassNameTemplate(whatFrom.simpleName!!)}(${TableProvider::class.toJavaPropertyString(false)} ${providerVariableName}")
+    constructorBuilder.append("public ${interfaceImplementerClassNameTemplate(whatFrom.simpleName!!)}(${TableProvider::class.toJavaPropertyString(false)} $providerVariableName")
     properties.forEach {
         val nullablePrefix: String
         if (it.isNullable()) {
@@ -232,12 +234,14 @@ fun addImports(from: KClass<*>, to: StringBuilder) {
 }
 
 fun addImports(from: KTypeProjection, to: StringBuilder) {
-    val currentImport = importTemplate((from.type as KClass<*>).javaObjectType.canonicalName)
-    if (!to.contains(currentImport)) {
-        to.append("$currentImport\n")
-    }
-    from.type?.arguments?.forEach {
-        addImports(it, to)
+    if (from.type != null) {
+        val currentImport = importTemplate((from.type as KClass<*>).javaObjectType.canonicalName)
+        if (!to.contains(currentImport)) {
+            to.append("$currentImport\n")
+        }
+        from.type?.arguments?.forEach {
+            addImports(it, to)
+        }
     }
 }
 
@@ -264,7 +268,13 @@ fun constructWhere(funcInfo: OverrideInfo): String {
         }
         currentFilterBuilder.append("$filterName.setFilterName(\"$filterOrOutField\");\n")
         for (i: Int in 0..filtersArgsCounts[filterOrOutField]!! - 1) {
-            currentFilterBuilder.append("$filterName.getArgs().add(${funcInfo.argsNamesStack.pop()});\n")
+            val arg = funcInfo.argsNamesStack.pop()
+            val param = funcInfo.function?.parameters?.getFirst { it.name == arg }
+            if (param?.type != null && (param?.type?.classifier as KClass<*>).isSubclassOf(Collection::class)) {
+                currentFilterBuilder.append("$filterName.getArgs().addAll($arg);\n")
+            } else {
+                currentFilterBuilder.append("$filterName.getArgs().add($arg);\n")
+            }
         }
         if (funcInfo.nameStack.isNotEmpty() && linksWithNextCondition.contains(funcInfo.nameStack.peek())) {
             currentFilterBuilder.append("$filterName.setLogicalLink(\"${funcInfo.nameStack.pop()}\");\n")
@@ -385,6 +395,7 @@ fun addStandardImports(headerBuilder: StringBuilder) {
     addImports(Filter::class, headerBuilder)
     addImports(PageFilter::class, headerBuilder)
     addImports(ArrayList::class, headerBuilder)
+    addImports(Arrays::class, headerBuilder)
     addImports(Collection::class, headerBuilder)
     addImports(SearchQueryCompiler::class, headerBuilder)
 }
@@ -442,7 +453,11 @@ fun primaryKeyFindBuilder(whereFrom: KClass<*>, primaryFields: List<KCallable<*>
     )
 }
 
-class OverridePseudoInfo(val presetNames: Stack<String>, val presetArgsNames: Stack<String>, override val returnClass: KClass<*> = Unit::class): OverrideInfo {
+class OverridePseudoInfo(
+        val presetNames: Stack<String>,
+        val presetArgsNames: Stack<String>,
+        override val function: KFunction<*>? = null,
+        override val returnClass: KClass<*> = Unit::class): OverrideInfo {
     override val nameStack: Stack<String> = Stack()
     override val argsNamesStack: Stack<String> = Stack()
     init {

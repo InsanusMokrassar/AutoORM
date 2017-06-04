@@ -65,7 +65,7 @@ fun KType.toJavaPropertyString(printInvariants: Boolean = false) : String {
         genericBuilder.append("<")
         val arguments = arguments
         arguments.forEach {
-            if (it.variance != KVariance.INVARIANT) {
+            if (it.variance != null && it.variance != KVariance.INVARIANT) {
                 val typeClass = it.type?.classifier as KClass<*>
                 genericBuilder.append(typeClass.javaObjectType.simpleName)
                 if (!arguments.isLast(it)) {

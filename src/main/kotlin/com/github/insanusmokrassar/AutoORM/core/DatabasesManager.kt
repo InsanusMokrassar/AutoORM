@@ -62,9 +62,7 @@ class DatabaseManager(config : IObject<Any>) {
                     parameters
             )?: throw IllegalArgumentException("Can't find config for driver $name"))
                     as? DatabaseDriver ?: throw IllegalStateException("Founded driver for name $name is not DatabaseDriver")
-            if (config.get("cache")) {
-                databaseDrivers.put(name, driver)
-            }
+            databaseDrivers.put(name, driver)
             return driver
         }
     }

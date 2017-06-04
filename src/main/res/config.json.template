@@ -5,8 +5,7 @@
       "classpath": "com.github.insanusmokrassar.AutoORM.drivers.jdbc.JDBCDatabaseDriver",
       "config": {
         "jdbcDriverPath": "org.h2.Driver"
-      },
-      "cache": true
+      }
     }
   ],
   "databases": [

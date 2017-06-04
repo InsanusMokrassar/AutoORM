@@ -49,40 +49,31 @@ private fun overrideVariableTemplate(fieldProperty: KProperty<*>): String {
     return overrideBuilder.toString()
 }
 
-private fun primaryKeyFindBuilder(primaryFields: List<KCallable<*>>): String {
-    val findBuilder = StringBuilder()
+private fun primaryKeyFindBuilder(whereFrom: KClass<*>, primaryFields: List<KCallable<*>> = whereFrom.getPrimaryFields()): String {
+    val namesStack = Stack<String>()
+    val argsStack = Stack<String>()
     primaryFields.forEach {
-        findBuilder.append(".field(\"${it.name}\", false).filter(\"eq\", ${it.name})")
+        namesStack.push("is")
+        namesStack.push(it.name)
         if (!primaryFields.isLast(it)) {
-            findBuilder.append(".linkWithNext(\"and\")")
+            namesStack.push("and")
         }
+        argsStack.push(it.name)
     }
-    return findBuilder.toString()
+    namesStack.push("where")
+    return constructSearchQuery(
+            whereFrom,
+            OverridePseudoInfo(namesStack, argsStack)
+    )
 }
 
 private val methodsBodies = mapOf(
         Pair(
                 "refresh",
                 {
-                    method: KFunction<*>, whereFrom: KClass<*>, primaryFields: List<KCallable<*>> ->
-                    val namesStack = Stack<String>()
-                    val argsStack = Stack<String>()
-                    primaryFields.forEach {
-                        namesStack.push("is")
-                        namesStack.push(it.name)
-                        if (!primaryFields.isLast(it)) {
-                            namesStack.push("and")
-                        }
-                        argsStack.push(it.name)
-                    }
-                    namesStack.push("where")
+                    method: KFunction<*>, whereFrom: KClass<*> ->
                     val methodBody = StringBuilder()
-                    methodBody.append(
-                            constructSearchQuery(
-                                    whereFrom,
-                                    OverridePseudoInfo(namesStack, argsStack)
-                            )
-                    )
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
                     methodBody.append("${whereFrom.simpleName} $resultName = ")
                             .append(
                                     resultResolver(
@@ -101,40 +92,35 @@ private val methodsBodies = mapOf(
                             whereFrom.isInterface()
                     )
                 }
+        ),
+        Pair(
+                "update",
+                {
+                    method: KFunction<*>, whereFrom: KClass<*> ->
+                    val methodBody = StringBuilder()
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
+                    methodBody.append("$providerVariableName.update(this, $searchQueryName);\n")
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
+                            whereFrom.isInterface()
+                    )
+                }
+        ),
+        Pair(
+                "remove",
+                {
+                    method: KFunction<*>, whereFrom: KClass<*> ->
+                    val methodBody = StringBuilder()
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
+                    methodBody.append("$providerVariableName.remove($searchQueryName);\n")
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
+                            whereFrom.isInterface()
+                    )
+                }
         )
-//        Pair(
-//                "update",
-//                {
-//                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
-//                    val queryBuilder = StringBuilder()
-//                    queryBuilder
-//                            .append("public void update() {\n")
-//                            .append("$providerVariableName.update(this, $providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
-//                    queryBuilder.append("}")
-//                }
-//        ),
-//        Pair(
-//                "insert",
-//                {
-//                    _: KClass<*>, _: List<KCallable<*>> ->
-//                    val queryBuilder = StringBuilder()
-//                    queryBuilder
-//                            .append("public void insert() {\n")
-//                            .append("$providerVariableName.insert(this);\n")
-//                    queryBuilder.append("}")
-//                }
-//        ),
-//        Pair(
-//                "remove",
-//                {
-//                    _: KClass<*>, primaryFields: List<KCallable<*>> ->
-//                    val queryBuilder = StringBuilder()
-//                    queryBuilder
-//                            .append("public void remove() {\n")
-//                            .append("$providerVariableName.remove($providerVariableName.getEmptyQuery()${primaryKeyFindBuilder(primaryFields)});\n")
-//                    queryBuilder.append("}")
-//                }
-//        )
 )
 
 private class OverridePseudoInfo(val presetNames: Stack<String>, val presetArgsNames: Stack<String>, override val returnClass: KClass<*> = Unit::class): OverrideInfo {
@@ -168,7 +154,6 @@ object OperationsCompiler {
         val variablesToOverride = whereFrom.getVariablesToOverride()
         val methodsToOverride = whereFrom.getMethodsToOverride()
         val constructorVariables = whereFrom.getRequiredInConstructor()
-        val primaryFields = whereFrom.getPrimaryFields()
 
         val classBodyBuilder = StringBuilder()
         classBodyBuilder.append("${privateFieldTemplate(TableProvider::class, providerVariableName)}\n")
@@ -179,7 +164,7 @@ object OperationsCompiler {
         classBodyBuilder.append("${createConstructorForProperties(whereFrom, constructorVariables)}\n")
 
         methodsToOverride.forEach {
-            classBodyBuilder.append("${methodsBodies[it.name]!!(it, whereFrom, primaryFields)}\n")
+            classBodyBuilder.append("${methodsBodies[it.name]!!(it, whereFrom)}\n")
         }
 
         val headerBuilder = StringBuilder()

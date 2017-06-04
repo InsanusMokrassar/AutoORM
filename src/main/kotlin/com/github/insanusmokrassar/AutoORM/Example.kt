@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
                 table.insert(
                         object : Example {
                             override val id: Int? = null
-                            override val name: String = "IAm"
+                            override var name: String = "IAm"
                             override val birthday: String = "nothing"
                             override var old: Int = random.nextInt(100)
                         }
@@ -55,7 +55,7 @@ fun main(args: Array<String>) {
                 table.insert(
                         object : Example {
                             override val id: Int? = null
-                            override val name: String = "IAm"
+                            override var name: String = "IAm"
                             override val birthday: String = "nothing"
                             override var old: Int = random.nextInt(100)
                         }
@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
             table.updateWhereNameIsAndOldIn(
                     object : Example {
                         override val id: Int? = null
-                        override val name: String = "IAm"
+                        override var name: String = "Bash"
                         override val birthday: String = "nothing"
                         override var old: Int = 101
                     },
@@ -76,7 +76,10 @@ fun main(args: Array<String>) {
                     100
             )
             Logger.getGlobal().info("UpdateTime: ${Date().time - startTime} ms")
-            table.findNameBirthdayWhereNameIs("IAm")[0].refresh()
+            table.findNameBirthdayWhereNameIs("IAm").forEach {
+                it.name = "Bard"
+                it.update()
+            }
             return
         }
     } finally {

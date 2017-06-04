@@ -7,7 +7,7 @@ interface Example {
     @PrimaryKey
     @Autoincrement
     val id: Int?
-    val name: String
+    var name: String
     val birthday: String
     @PrimaryKey
     val old: Int?

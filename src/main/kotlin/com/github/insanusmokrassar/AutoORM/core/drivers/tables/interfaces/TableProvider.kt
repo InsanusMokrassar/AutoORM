@@ -4,8 +4,8 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQ
 
 interface TableProvider<M : Any, out O : M> {
     fun insert(what : M) : Boolean
-    fun update(than : M, where : SearchQueryCompiler<out Any>) : Boolean
-    fun remove(where : SearchQueryCompiler<out Any>) : Boolean
-    fun find(where : SearchQueryCompiler<out Any>) : Collection<O>
-    fun getEmptyQuery() : SearchQueryCompiler<out Any>
+    fun update(than : M, where : SearchQueryCompiler<Any>) : Boolean
+    fun remove(where : SearchQueryCompiler<Any>) : Boolean
+    fun find(where : SearchQueryCompiler<Any>) : Collection<O>
+    fun getEmptyQuery() : SearchQueryCompiler<Any>
 }

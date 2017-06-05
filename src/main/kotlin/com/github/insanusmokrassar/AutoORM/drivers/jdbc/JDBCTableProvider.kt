@@ -85,7 +85,7 @@ class JDBCTableProvider<M : Any, O : M>(
         }
     }
 
-    override fun remove(where: SearchQueryCompiler<out Any>): Boolean {
+    override fun remove(where: SearchQueryCompiler<Any>): Boolean {
         if (where is JDBCSearchQueryCompiler) {
             val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName} ${where.compileQuery()}${where.compilePaging()};")
             val statement = connection.prepareStatement(queryBuilder.toString())
@@ -95,16 +95,16 @@ class JDBCTableProvider<M : Any, O : M>(
         }
     }
 
-    override fun find(where: SearchQueryCompiler<out Any>): Collection<O> {
+    override fun find(where: SearchQueryCompiler<Any>): Collection<O> {
         if (where is JDBCSearchQueryCompiler) {
             checkSearchCompileQuery(where)
             val queryBuilder = StringBuilder().append("SELECT ")
-            if (where.fields == null) {
+            if (where.fields.isEmpty()) {
                 queryBuilder.append("* ")
             } else {
-                where.fields!!.forEach {
+                where.fields.forEach {
                     queryBuilder.append(it)
-                    if (where.fields!!.indexOf(it) < where.fields!!.size - 1) {
+                    if (!where.fields.isLast(it)) {
                         queryBuilder.append(",")
                     }
                 }
@@ -115,12 +115,12 @@ class JDBCTableProvider<M : Any, O : M>(
             val result = ArrayList<O>()
             while (resultSet.next()) {
                 val currentValuesMap = HashMap<KProperty<*>, Any>()
-                if (where.fields == null) {
+                if (where.fields.isEmpty()) {
                     variablesMap.values.forEach {
                         currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
                     }
                 } else {
-                    where.fields!!.forEach {
+                    where.fields.forEach {
                         val currentProperty = variablesMap[it]!!
                         currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().javaObjectType))
                     }
@@ -133,7 +133,7 @@ class JDBCTableProvider<M : Any, O : M>(
         }
     }
 
-    override fun getEmptyQuery(): SearchQueryCompiler<out Any> {
+    override fun getEmptyQuery(): SearchQueryCompiler<Any> {
         return JDBCSearchQueryCompiler()
     }
 

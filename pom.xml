@@ -181,11 +181,6 @@
         </dependency>
         <dependency>
             <groupId>com.github.insanusmokrassar</groupId>
-            <artifactId>IObjectKRealisations</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.insanusmokrassar</groupId>
             <artifactId>iobjectk</artifactId>
             <version>1.0</version>
         </dependency>
@@ -193,11 +188,6 @@
             <groupId>net.openhft</groupId>
             <artifactId>compiler</artifactId>
             <version>2.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.195</version>
         </dependency>
     </dependencies>
 </project>

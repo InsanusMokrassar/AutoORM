@@ -1,7 +1,7 @@
 package com.github.insanusmokrassar.AutoORM.drivers.jdbc
 
 import com.github.insanusmokrassar.AutoORM.core.asSQLString
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 
 
@@ -112,21 +112,21 @@ private val operations = mapOf(
         )
 )
 
-class JDBCSearchQueryCompiler : SearchQueryCompiler<String>() {
-    override fun compilePaging(): String {
-        if (pageFilter != null) {
-            val offset = pageFilter!!.page * pageFilter!!.size
-            return " LIMIT ${pageFilter!!.size} OFFSET $offset"
+object JDBCSearchQueryCompiler {
+    fun compilePaging(query: SearchQuery): String {
+        if (query.pageFilter != null) {
+            val offset = query.pageFilter!!.page * query.pageFilter!!.size
+            return " LIMIT ${query.pageFilter!!.size} OFFSET $offset"
         } else {
             return ""
         }
     }
 
-    override fun compileQuery(): String {
-        if (filters.isNotEmpty()) {
+    fun compileQuery(query: SearchQuery): String {
+        if (query.filters.isNotEmpty()) {
             val queryBuilder = StringBuilder().append(" WHERE ")
 
-            filters.forEach {
+            query.filters.forEach {
                 if (operations.contains(it.filterName)) {
                     queryBuilder.append(
                             operations[it.filterName]!!(it)

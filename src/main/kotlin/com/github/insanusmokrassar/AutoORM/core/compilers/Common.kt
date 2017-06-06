@@ -1,7 +1,7 @@
 package com.github.insanusmokrassar.AutoORM.core.compilers
 
 import com.github.insanusmokrassar.AutoORM.core.*
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.PageFilter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
@@ -302,7 +302,7 @@ fun constructSearchQuery(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo)
         neededFields.add(funcInfo.nameStack.pop())
     }
     val searchQueryBody = StringBuilder()
-    searchQueryBody.append("${SearchQueryCompiler::class.simpleName} $searchQueryName = $providerVariableName.getEmptyQuery();\n")
+    searchQueryBody.append("${SearchQuery::class.simpleName} $searchQueryName = new ${SearchQuery::class.simpleName}();\n")
     neededFields.forEach {
         searchQueryBody.append("$searchQueryName.getFields().add(\"$it\");\n")
     }
@@ -340,7 +340,7 @@ fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, 
     functionParams.forEach {
         val classifier = it.type.classifier
         when(classifier) {
-            SearchQueryCompiler::class -> resultBuilder.append(searchQueryName)
+            SearchQuery::class -> resultBuilder.append(searchQueryName)
             else -> {
                 if (classifier is KTypeParameter && classifier.variance == KVariance.INVARIANT) {
                     resultBuilder.append(funcInfo.argsNamesStack.pop())
@@ -363,7 +363,7 @@ fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, 
         )
     }
     val builder = StringBuilder()
-    if (functionParams.select({ it.type.classifier }).contains(SearchQueryCompiler::class)) {
+    if (functionParams.select({ it.type.classifier }).contains(SearchQuery::class)) {
         builder.append("${constructSearchQuery(modelInterfaceClass, funcInfo)}\n")
     }
     builder.append(resultBuilder)
@@ -396,7 +396,7 @@ fun addStandardImports(headerBuilder: StringBuilder) {
     addImports(ArrayList::class, headerBuilder)
     addImports(Arrays::class, headerBuilder)
     addImports(Collection::class, headerBuilder)
-    addImports(SearchQueryCompiler::class, headerBuilder)
+    addImports(SearchQuery::class, headerBuilder)
 }
 
 fun getterTemplate(fieldProperty: KProperty<*>): String {

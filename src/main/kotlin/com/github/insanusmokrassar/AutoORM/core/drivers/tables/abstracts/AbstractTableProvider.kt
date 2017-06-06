@@ -1,6 +1,7 @@
 package com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts
 
 import com.github.insanusmokrassar.AutoORM.core.compilers.OperationsCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AutoORM.core.getFirst
 import com.github.insanusmokrassar.AutoORM.core.getRequiredInConstructor
@@ -27,9 +28,9 @@ abstract class AbstractTableProvider<M : Any, O : M>(protected val modelClass: K
         return insert(toValuesMap(what))
     }
 
-    abstract fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<Any>): Boolean
+    abstract fun update(values: Map<KProperty<*>, Any>, where: SearchQuery): Boolean
 
-    override fun update(than: M, where: SearchQueryCompiler<Any>): Boolean {
+    override fun update(than: M, where: SearchQuery): Boolean {
         var pairs = toValuesMap(than)
         if (where.fields.isNotEmpty()) {
             pairs = pairs.filter {

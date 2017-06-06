@@ -2,7 +2,7 @@ package com.github.insanusmokrassar.AutoORM.drivers.jdbc
 
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.AbstractTableProvider
-import com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts.SearchQueryCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import java.sql.Connection
 import java.util.logging.Logger
 import kotlin.reflect.KCallable
@@ -36,7 +36,7 @@ val nativeTypesMap = mapOf(
         )
 )
 
-class JDBCTableProvider<M : Any, O : M>(
+class JDBCTableProvider<M : Any, O : M> (
         modelClass: KClass<M>,
         operationsClass: KClass<in O>,
         val connection: Connection)
@@ -85,56 +85,44 @@ class JDBCTableProvider<M : Any, O : M>(
         }
     }
 
-    override fun remove(where: SearchQueryCompiler<Any>): Boolean {
-        if (where is JDBCSearchQueryCompiler) {
-            val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName} ${where.compileQuery()}${where.compilePaging()};")
-            val statement = connection.prepareStatement(queryBuilder.toString())
-            return statement.execute()
-        } else{
-            throw IllegalArgumentException("JDBC provider can't handle query compiler of other providers")
-        }
+    override fun remove(where: SearchQuery): Boolean {
+        val queryBuilder = StringBuilder().append("DELETE FROM ${modelClass.simpleName} ${JDBCSearchQueryCompiler.compileQuery(where)}${JDBCSearchQueryCompiler.compilePaging(where)};")
+        val statement = connection.prepareStatement(queryBuilder.toString())
+        return statement.execute()
     }
 
-    override fun find(where: SearchQueryCompiler<Any>): Collection<O> {
-        if (where is JDBCSearchQueryCompiler) {
-            checkSearchCompileQuery(where)
-            val queryBuilder = StringBuilder().append("SELECT ")
+    override fun find(where: SearchQuery): Collection<O> {
+        checkSearchCompileQuery(where)
+        val queryBuilder = StringBuilder().append("SELECT ")
+        if (where.fields.isEmpty()) {
+            queryBuilder.append("* ")
+        } else {
+            where.fields.forEach {
+                queryBuilder.append(it)
+                if (!where.fields.isLast(it)) {
+                    queryBuilder.append(",")
+                }
+            }
+        }
+        queryBuilder.append(" FROM ${modelClass.simpleName} ${JDBCSearchQueryCompiler.compileQuery(where)}${JDBCSearchQueryCompiler.compilePaging(where)};")
+
+        val resultSet = connection.prepareStatement(queryBuilder.toString()).executeQuery()
+        val result = ArrayList<O>()
+        while (resultSet.next()) {
+            val currentValuesMap = HashMap<KProperty<*>, Any>()
             if (where.fields.isEmpty()) {
-                queryBuilder.append("* ")
+                variablesMap.values.forEach {
+                    currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
+                }
             } else {
                 where.fields.forEach {
-                    queryBuilder.append(it)
-                    if (!where.fields.isLast(it)) {
-                        queryBuilder.append(",")
-                    }
+                    val currentProperty = variablesMap[it]!!
+                    currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().javaObjectType))
                 }
             }
-            queryBuilder.append(" FROM ${modelClass.simpleName} ${where.compileQuery()}${where.compilePaging()};")
-
-            val resultSet = connection.prepareStatement(queryBuilder.toString()).executeQuery()
-            val result = ArrayList<O>()
-            while (resultSet.next()) {
-                val currentValuesMap = HashMap<KProperty<*>, Any>()
-                if (where.fields.isEmpty()) {
-                    variablesMap.values.forEach {
-                        currentValuesMap.put(it, resultSet.getObject(it.name, it.returnClass().java))
-                    }
-                } else {
-                    where.fields.forEach {
-                        val currentProperty = variablesMap[it]!!
-                        currentValuesMap.put(currentProperty, resultSet.getObject(it, currentProperty.returnClass().javaObjectType))
-                    }
-                }
-                result.add(createModelFromValuesMap(currentValuesMap))
-            }
-            return result
-        } else {
-            throw IllegalArgumentException("JDBC provider can't handle query compiler of other providers")
+            result.add(createModelFromValuesMap(currentValuesMap))
         }
-    }
-
-    override fun getEmptyQuery(): SearchQueryCompiler<Any> {
-        return JDBCSearchQueryCompiler()
+        return result
     }
 
     override fun insert(values: Map<KProperty<*>, Any>): Boolean {
@@ -159,28 +147,24 @@ class JDBCTableProvider<M : Any, O : M>(
         return statement.execute()
     }
 
-    override fun update(values: Map<KProperty<*>, Any>, where: SearchQueryCompiler<Any>): Boolean {
-        if (where is JDBCSearchQueryCompiler) {
-            val queryBuilder = StringBuilder().append("UPDATE ${modelClass.simpleName} SET ")
-            values.forEach {
-                if (it.value is String) {
-                    queryBuilder.append(" ${it.key.name}=\'${it.value}\'")
-                } else {
-                    queryBuilder.append(" ${it.key.name}=${it.value}")
-                }
-                if (!values.keys.isLast(it.key)) {
-                    queryBuilder.append(",")
-                }
+    override fun update(values: Map<KProperty<*>, Any>, where: SearchQuery): Boolean {
+        val queryBuilder = StringBuilder().append("UPDATE ${modelClass.simpleName} SET ")
+        values.forEach {
+            if (it.value is String) {
+                queryBuilder.append(" ${it.key.name}=\'${it.value}\'")
+            } else {
+                queryBuilder.append(" ${it.key.name}=${it.value}")
             }
-            queryBuilder.append("${where.compileQuery()}${where.compilePaging()};")
-            val statement = connection.prepareStatement(queryBuilder.toString())
-            return statement.execute()
-        } else {
-            throw IllegalArgumentException("JDBC provider can't handle query compiler of other providers")
+            if (!values.keys.isLast(it.key)) {
+                queryBuilder.append(",")
+            }
         }
+        queryBuilder.append("${JDBCSearchQueryCompiler.compileQuery(where)}${JDBCSearchQueryCompiler.compilePaging(where)};")
+        val statement = connection.prepareStatement(queryBuilder.toString())
+        return statement.execute()
     }
 
-    protected fun checkSearchCompileQuery(query : JDBCSearchQueryCompiler) {
+    protected fun checkSearchCompileQuery(query : SearchQuery) {
         if (primaryFields.isNotEmpty() && !query.fields.containsAll(primaryFields.select({it.name}))) {
             query.fields.addAll(primaryFields.select({it.name}))
         }

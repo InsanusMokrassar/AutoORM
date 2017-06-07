@@ -1,6 +1,7 @@
 package com.github.insanusmokrassar.AutoORM.core
 
 import com.github.insanusmokrassar.AutoORM.core.compilers.TablesCompiler
+import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseDriver
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableDriver
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.Transactable
@@ -8,7 +9,8 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
 class DatabaseConnect(
-        private val driver: TableDriver,
+        private val databaseDriver: DatabaseDriver,
+        private val tableDriver: TableDriver,
         private val transactionManager: Transactable,
         private val onFree: (DatabaseConnect) -> Unit = {},
         private val onClose: (DatabaseConnect) -> Unit = {}) : Transactable by transactionManager {
@@ -18,7 +20,7 @@ class DatabaseConnect(
             tableClass: KClass<T>,
             modelClass: KClass<M>,
             operationsClass: KClass<in O> = modelClass): T {
-        val provider = driver.getTableProvider(modelClass, operationsClass)
+        val provider = tableDriver.getTableProvider(modelClass, operationsClass)
         val realisation = TablesCompiler.getRealisation(tableClass, modelClass)
         val result = realisation.constructors.getFirst {
             it.parameters.size == 1 && (it.parameters[0].type.classifier as KClass<*>).isSubclassOf(TableProvider::class)
@@ -31,7 +33,7 @@ class DatabaseConnect(
     fun <M : Any, O : M> getTableProvider(
             modelClass: KClass<M>,
             operationsClass: KClass<in O> = modelClass): TableProvider<M, O> {
-        return driver.getTableProvider(modelClass, operationsClass)
+        return tableDriver.getTableProvider(modelClass, operationsClass)
     }
 
     fun free() {
@@ -39,6 +41,7 @@ class DatabaseConnect(
     }
 
     fun close() {
+        databaseDriver.close()
         onClose(this)
     }
 }

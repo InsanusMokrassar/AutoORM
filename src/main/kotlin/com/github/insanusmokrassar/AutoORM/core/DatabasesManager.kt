@@ -14,7 +14,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val databaseDrivers: MutableMap<String, DatabaseDriver> = HashMap()
     val databasesPools = HashMap<String, ConnectionsPool>()
     databasesConfigs.forEach {
-        val driver = getDatabaseDriver(it.get("driver"), databaseDrivers, driversConfigs)
+        val driver = getDatabaseDriver(it.get("tableDriver"), databaseDrivers, driversConfigs)
         val currentConfig = it
         databasesPools.put(
                 it.get<String>("name"),
@@ -62,8 +62,8 @@ private fun getDatabaseDriver(
             it.parameters.size == 1 && (it.parameters[0].type.classifier as kotlin.reflect.KClass<*>).isSuperclassOf(parameters::class)
         }?.call(
                 parameters
-        )?: throw IllegalArgumentException("Can't find config for driver $name"))
-                as? DatabaseDriver ?: throw IllegalStateException("Founded driver for name $name is not AbstractDatabaseDriver")
+        )?: throw IllegalArgumentException("Can't find config for tableDriver $name"))
+                as? DatabaseDriver ?: throw IllegalStateException("Founded tableDriver for name $name is not AbstractDatabaseDriver")
         databaseDrivers.put(name, driver)
         return driver
     }

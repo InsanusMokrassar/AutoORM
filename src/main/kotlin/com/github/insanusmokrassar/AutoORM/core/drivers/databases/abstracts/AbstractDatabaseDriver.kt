@@ -10,6 +10,7 @@ abstract class AbstractDatabaseDriver : DatabaseDriver {
     override fun getDatabaseConnect(params: IObject<Any>, onFreeCallback: (DatabaseConnect) -> Unit, onCloseCallback: (DatabaseConnect) -> Unit): DatabaseConnect {
         val driverPartsPair = makeDriverAndTransactable(params)
         return DatabaseConnect(
+                this,
                 driverPartsPair.first,
                 driverPartsPair.second,
                 onFreeCallback,

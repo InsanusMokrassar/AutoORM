@@ -11,7 +11,7 @@ class DatabaseConnect(
         private val driver: TableDriver,
         private val transactionManager: Transactable,
         private val onFree: (DatabaseConnect) -> Unit = {},
-        private val onClose: (DatabaseConnect) -> Unit = {}) : Transactable {
+        private val onClose: (DatabaseConnect) -> Unit = {}) : Transactable by transactionManager {
 
     @Throws(IllegalArgumentException::class)
     fun <T : Any, M : Any, O : M> getTable(
@@ -32,18 +32,6 @@ class DatabaseConnect(
             modelClass: KClass<M>,
             operationsClass: KClass<in O> = modelClass): TableProvider<M, O> {
         return driver.getTableProvider(modelClass, operationsClass)
-    }
-
-    override fun start() {
-        transactionManager.start()
-    }
-
-    override fun abort() {
-        transactionManager.abort()
-    }
-
-    override fun submit() {
-        transactionManager.submit()
     }
 
     fun free() {

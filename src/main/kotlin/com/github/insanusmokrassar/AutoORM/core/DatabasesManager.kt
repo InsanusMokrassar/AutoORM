@@ -63,7 +63,7 @@ private fun getDatabaseDriver(
         }?.call(
                 parameters
         )?: throw IllegalArgumentException("Can't find config for driver $name"))
-                as? DatabaseDriver ?: throw IllegalStateException("Founded driver for name $name is not DatabaseDriver")
+                as? DatabaseDriver ?: throw IllegalStateException("Founded driver for name $name is not AbstractDatabaseDriver")
         databaseDrivers.put(name, driver)
         return driver
     }

@@ -248,7 +248,9 @@ fun addImports(from: KTypeProjection, to: StringBuilder) {
 fun constructWhere(funcInfo: OverrideInfo): String {
     val builder = StringBuilder()
     val filters = ArrayList<String>()
-    while (!funcInfo.nameStack.empty() && !pagingIdentifiers.containsKey(funcInfo.nameStack.peek())) {
+    while (funcInfo.nameStack.isNotEmpty()
+            && !(funcInfo.nameStack.size == 1
+            && pagingIdentifiers.containsKey(funcInfo.nameStack.peek()))) {
         val currentFilterBuilder = StringBuilder()
         if (filters.isEmpty()) {
             currentFilterBuilder.append("${Filter::class.simpleName} $filterName;")
@@ -280,7 +282,7 @@ fun constructWhere(funcInfo: OverrideInfo): String {
         for (i: Int in 0..filtersArgsCounts[filterOrOutField]!! - 1) {
             val arg = funcInfo.argsNamesStack.pop()
             val param = funcInfo.function?.parameters?.getFirst { it.name == arg }
-            if (param?.type != null && (param?.type?.classifier as KClass<*>).isSubclassOf(Collection::class)) {
+            if (param?.type != null && (param.type.classifier as KClass<*>).isSubclassOf(Collection::class)) {
                 currentFilterBuilder.append("$filterName.getArgs().addAll($arg);\n")
             } else {
                 currentFilterBuilder.append("$filterName.getArgs().add($arg);\n")

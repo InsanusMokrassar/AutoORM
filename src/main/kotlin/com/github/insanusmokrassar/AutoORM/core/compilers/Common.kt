@@ -142,7 +142,7 @@ val whereIdentifiersAlgorithms = mapOf(
                 }
         ),
         Pair(
-                "By",
+                "by",
                 {
                     funcInfo: OverrideInfo ->
                     constructWhere(funcInfo)
@@ -253,8 +253,19 @@ fun constructWhere(funcInfo: OverrideInfo): String {
         if (filters.isEmpty()) {
             currentFilterBuilder.append("${Filter::class.simpleName} $filterName;")
         }
-        val fieldName = funcInfo.nameStack.pop()
-        var filterOrOutField = funcInfo.nameStack.pop()
+        var fieldName: String = funcInfo.nameStack.pop()
+        while (funcInfo.nameStack.isNotEmpty()
+                && !filtersArgsCounts.keys.contains(funcInfo.nameStack.peek())
+                && !whereIdentifiersAlgorithms.keys.contains(funcInfo.nameStack.peek())
+                && !linksWithNextCondition.contains(funcInfo.nameStack.peek())) {
+            fieldName += funcInfo.nameStack.pop()
+        }
+        var filterOrOutField: String = ""
+        if (funcInfo.nameStack.isEmpty() || !filtersArgsCounts.keys.contains(funcInfo.nameStack.peek())) {
+            filterOrOutField = "is"
+        } else {
+            filterOrOutField = funcInfo.nameStack.pop()
+        }
         val isOut = !filtersArgsCounts.keys.contains(filterOrOutField) && filterOrOutField != "not"
         currentFilterBuilder.append(
                 "$filterName = new ${Filter::class.simpleName}(\"$fieldName\", $isOut);\n"

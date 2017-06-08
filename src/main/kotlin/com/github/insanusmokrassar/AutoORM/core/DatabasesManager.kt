@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core
 
-import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseDriver
+import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.full.isSuperclassOf
 
@@ -11,10 +11,10 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val databasesConfigs: List<IObject<Any>> = config.get<List<Any>>("databases").filter {
         it is IObject<*>
     } as List<IObject<Any>>
-    val databaseDrivers: MutableMap<String, DatabaseDriver> = HashMap()
+    val databaseDrivers: MutableMap<String, DatabaseProvider> = HashMap()
     val databasesPools = HashMap<String, ConnectionsPool>()
     databasesConfigs.forEach {
-        val driver = getDatabaseDriver(it.get("tableDriver"), databaseDrivers, driversConfigs)
+        val driver = getDatabaseDriver(it.get("driver"), databaseDrivers, driversConfigs)
         val currentConfig = it
         databasesPools.put(
                 it.get<String>("name"),
@@ -49,8 +49,8 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
 private fun getDatabaseDriver(
         name: String,
         databaseDrivers:
-        MutableMap<String, DatabaseDriver>,
-        driversConfigs: List<IObject<Any>>) : DatabaseDriver {
+        MutableMap<String, DatabaseProvider>,
+        driversConfigs: List<IObject<Any>>) : DatabaseProvider {
     if (databaseDrivers.containsKey(name)) {
         return databaseDrivers[name]!!
     } else {
@@ -63,7 +63,7 @@ private fun getDatabaseDriver(
         }?.call(
                 parameters
         )?: throw IllegalArgumentException("Can't find config for tableDriver $name"))
-                as? DatabaseDriver ?: throw IllegalStateException("Founded tableDriver for name $name is not AbstractDatabaseDriver")
+                as? DatabaseProvider ?: throw IllegalStateException("Founded tableDriver for name $name is not AbstractDatabaseProvider")
         databaseDrivers.put(name, driver)
         return driver
     }

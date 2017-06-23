@@ -7,3 +7,5 @@ val driversField = "drivers"
 val databasesField = "databases"
 val connectionsField = "connections"
 val classpathField = "classpath"
+
+val classesCompilerField = "classesCompiler"

@@ -184,14 +184,6 @@ fun KProperty<*>.isMutable() : Boolean {
 }
 
 /**
- * @return Первый элемент, удовлетворяющий условию. Если ни один объект не удовлетворил условию - null.
- */
-inline fun <T> Iterable<T>.getFirst(predicate: (T) -> Boolean): T? {
-    for (element in this) if (predicate(element)) return@getFirst element
-    return null
-}
-
-/**
  * @return Строка, пригодная для использования в SQL запросах.
  */
 fun String.asSQLString() : String {

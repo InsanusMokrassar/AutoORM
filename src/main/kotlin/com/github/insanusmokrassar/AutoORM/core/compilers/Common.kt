@@ -85,8 +85,8 @@ val pagingIdentifiers = mapOf(
                     it: OverrideInfo ->
                     val pageFilterBuilder = StringBuilder()
                     pageFilterBuilder.append("${PageFilter::class.simpleName} $pageFilterName = new ${PageFilter::class.simpleName}();\n")
-                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().getFirst { it.name == "page" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
-                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().getFirst { it.name == "size" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
+                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().first { it.name == "page" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
+                    pageFilterBuilder.append("$pageFilterName.${(PageFilter::class.getVariables().first { it.name == "size" } as KMutableProperty<*>).javaSetter!!.name}(${it.argsNamesStack.pop()});\n")
                     pageFilterBuilder.append("$searchQueryName.setPageFilter($pageFilterName);\n")
                     pageFilterBuilder.toString()
                 }
@@ -281,7 +281,7 @@ fun constructWhere(funcInfo: OverrideInfo): String {
         currentFilterBuilder.append("$filterName.setFilterName(\"$filterOrOutField\");\n")
         for (i: Int in 0..filtersArgsCounts[filterOrOutField]!! - 1) {
             val arg = funcInfo.argsNamesStack.pop()
-            val param = funcInfo.function?.parameters?.getFirst { it.name == arg }
+            val param = funcInfo.function?.parameters?.first { it.name == arg }
             if (param?.type != null && (param.type.classifier as KClass<*>).isSubclassOf(Collection::class)) {
                 currentFilterBuilder.append("$filterName.getArgs().addAll($arg);\n")
             } else {
@@ -346,10 +346,10 @@ fun resultResolver(from: KClass<*>, to: KClass<*>, resultVariable: String = resu
 }
 
 fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, operationName: String): String {
-    val currentFunction = TableProvider::class.functions.getFirst{ it.name== operationName }!!
+    val currentFunction = TableProvider::class.functions.first { it.name== operationName }!!
     val functionParams = currentFunction.parameters.filter { it.kind != KParameter.Kind.INSTANCE }
     val resultBuilder = StringBuilder()
-    resultBuilder.append("${TableProvider::class.functions.getFirst { it.name== operationName }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.$operationName(")
+    resultBuilder.append("${TableProvider::class.functions.first { it.name== operationName }!!.returnType.toJavaPropertyString()} $resultName = $providerVariableName.$operationName(")
     functionParams.forEach {
         val classifier = it.type.classifier
         when(classifier) {
@@ -367,7 +367,7 @@ fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, 
     resultBuilder.append(");\n")
 
     val resolvedResult = resultResolver(
-            TableProvider::class.functions.getFirst { it.name== operationName }!!.returnClass(),
+            TableProvider::class.functions.first { it.name== operationName }!!.returnClass(),
             funcInfo.returnClass
     )
     if (resolvedResult.isNotEmpty()) {

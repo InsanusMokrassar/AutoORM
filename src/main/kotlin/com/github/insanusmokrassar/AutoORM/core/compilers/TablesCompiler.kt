@@ -33,7 +33,7 @@ private class OverrideFunctionInfo(override val function: KFunction<*>) : Overri
     }
 }
 
-object TablesCompiler {
+class TablesCompiler(private val compiler: ClassCompiler) {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
     fun <T : Any> getRealisation(tableInterface: KClass<in T>, modelInterface: KClass<*>) : KClass<T> {
@@ -73,11 +73,11 @@ object TablesCompiler {
             )
         }
 
-        val aClass = CompilerUtils.CACHED_COMPILER.loadFromJava(
+        val aClass = compiler.compile(
                 interfaceImplementerClassNameTemplate(tableInterfaceClass.java.canonicalName),
                 classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), tableInterfaceClass.simpleName!!, tableInterfaceClass.isInterface())
         )
 
-        return (aClass.kotlin as KClass<out T>)
+        return aClass as KClass<out T>
     }
 }

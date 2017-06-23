@@ -19,5 +19,9 @@
       },
       "connections": 1
     }
-  ]
+  ],
+  "classesCompiler": {
+    "classpath": "com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler"
+    "config": {}
+  }
 }

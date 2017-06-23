@@ -1,10 +1,14 @@
 package com.github.insanusmokrassar.AutoORM.core
 
 import com.github.insanusmokrassar.AutoORM.*
+import com.github.insanusmokrassar.AutoORM.core.compilers.ClassCompiler
+import com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
+import kotlin.reflect.KClass
 import kotlin.reflect.full.isSuperclassOf
 
+@Throws(IllegalArgumentException::class)
 fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val driversConfigs: List<IObject<Any>> = config.get<List<Any>>(driversField).filter {
         it is IObject<*>
@@ -12,10 +16,47 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val databasesConfigs: List<IObject<Any>> = config.get<List<Any>>(databasesField).filter {
         it is IObject<*>
     } as List<IObject<Any>>
+    var compilerConfig: IObject<Any>?
+    try {
+        compilerConfig = config.get<IObject<Any>>(classesCompilerField)
+    } catch (e: Exception) {
+        compilerConfig = null
+    }
+    val compiler: ClassCompiler
+    if (compilerConfig == null) {
+        compiler = DefaultClassCompiler()
+    } else {
+        val config: Any?
+        if (compilerConfig.keys().contains(configField)) {
+            config = compilerConfig.get<Any>(configField)
+        } else {
+            config = null
+        }
+        val compilerClass = Class.forName(compilerConfig.get(classpathField)) as KClass<out ClassCompiler>
+        if (config == null) {
+            try {
+                compiler = compilerClass.constructors.first {
+                    it.parameters.isEmpty()
+                }.call()
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
+            }
+        } else {
+            try {
+                compiler = compilerClass.constructors.first {
+                    it.parameters.size == 1 && it.parameters[0].type.classifier == config::class
+                }.call()
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
+            }
+        }
+    }
+
     val databaseDrivers: MutableMap<String, DatabaseProvider> = HashMap()
     val databasesPools = HashMap<String, ConnectionsPool>()
+
     databasesConfigs.forEach {
-        val driver = getDatabaseDriver(it.get(driverField), databaseDrivers, driversConfigs)
+        val provider = getDatabaseProvider(it.get(driverField), databaseDrivers, driversConfigs)
         val currentConfig = it
         databasesPools.put(
                 it.get<String>(nameField),
@@ -26,8 +67,9 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
                         val connections = ArrayList<DatabaseConnect>()
                         for (i: Int in 0..currentConfig.get<Int>(connectionsField) - 1) {
                             connections.add(
-                                    driver.getDatabaseConnect(
+                                    provider.getDatabaseConnect(
                                             currentConfig.get(configField),
+                                            compiler,
                                             onFree,
                                             onClose
                                     )
@@ -35,8 +77,9 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
                         }
                         connections
                     } else {
-                        listOf(driver.getDatabaseConnect(
+                        listOf(provider.getDatabaseConnect(
                                 currentConfig.get(configField),
+                                compiler,
                                 onFree,
                                 onClose
                         ))
@@ -47,7 +90,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     return databasesPools
 }
 
-private fun getDatabaseDriver(
+private fun getDatabaseProvider(
         name: String,
         databaseDrivers:
         MutableMap<String, DatabaseProvider>,
@@ -55,17 +98,21 @@ private fun getDatabaseDriver(
     if (databaseDrivers.containsKey(name)) {
         return databaseDrivers[name]!!
     } else {
-        val config = driversConfigs.getFirst {
-            it.get<String>(nameField) == name
-        }?: throw IllegalArgumentException("Can't find config for database")
-        val parameters = config.get<Any>(configField)
-        val driver = (Class.forName(config.get(classpathField)).kotlin.constructors.getFirst {
-            it.parameters.size == 1 && (it.parameters[0].type.classifier as kotlin.reflect.KClass<*>).isSuperclassOf(parameters::class)
-        }?.call(
-                parameters
-        )?: throw IllegalArgumentException("Can't find config for tableDriver $name"))
-                as? DatabaseProvider ?: throw IllegalStateException("Founded tableDriver for name $name is not AbstractDatabaseProvider")
-        databaseDrivers.put(name, driver)
-        return driver
+        try {
+            val config = driversConfigs.first {
+                it.get<String>(nameField) == name
+            }
+            val parameters = config.get<Any>(configField)
+            val driver = (Class.forName(config.get(classpathField)).kotlin.constructors.first {
+                it.parameters.size == 1 && (it.parameters[0].type.classifier as kotlin.reflect.KClass<*>).isSuperclassOf(parameters::class)
+            }.call(
+                    parameters
+            )?: throw IllegalArgumentException("Can't find config for tableDriver $name"))
+                    as? DatabaseProvider ?: throw IllegalStateException("Founded tableDriver for name $name is not AbstractDatabaseProvider")
+            databaseDrivers.put(name, driver)
+            return driver
+        } catch (e: NoSuchElementException) {
+            throw IllegalArgumentException("Can't find config for database")
+        }
     }
 }

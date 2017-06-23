@@ -63,7 +63,7 @@ private val methodsBodies = mapOf(
         )
 )
 
-object OperationsCompiler {
+class OperationsCompiler(private val compiler: ClassCompiler) {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
     fun <O : Any> getRealisation(what : KClass<in O>) : KClass<out O> {
@@ -105,10 +105,10 @@ object OperationsCompiler {
         }
         addStandardImports(headerBuilder)
 
-        val aClass = CompilerUtils.CACHED_COMPILER.loadFromJava(
+        val aClass = compiler.compile(
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),
                 classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName, whereFrom.isInterface()))
 
-        return (aClass.kotlin as KClass<out O>)
+        return aClass as KClass<out O>
     }
 }

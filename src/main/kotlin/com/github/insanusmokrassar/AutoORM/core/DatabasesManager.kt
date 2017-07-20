@@ -32,7 +32,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
         } else {
             config = null
         }
-        val compilerClass = Class.forName(compilerConfig.get(classpathField)) as KClass<out ClassCompiler>
+        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out ClassCompiler>
         if (config == null) {
             try {
                 compiler = compilerClass.constructors.first {

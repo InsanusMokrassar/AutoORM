@@ -21,16 +21,16 @@ class DatabaseConnect(
 
     @Throws(IllegalArgumentException::class)
     fun <T : Any, M : Any, O : M> getTable(
-            tableClass: KClass<T>,
-            modelClass: KClass<M>,
-            operationsClass: KClass<in O> = modelClass): T {
-        val provider = getTableProvider(modelClass, operationsClass)
-        val realisation = tablesCompiler.getRealisation(tableClass, modelClass)
+            tableOperationsClass: KClass<T>,
+            tableModelClass: KClass<M>,
+            tableModelOperationsClass: KClass<in O> = tableModelClass): T {
+        val provider = getTableProvider(tableModelClass, tableModelOperationsClass)
+        val realisation = tablesCompiler.getRealisation(tableOperationsClass, tableModelClass)
         val result = realisation.constructors.first {
             it.parameters.size == 1 && (it.parameters[0].type.classifier as KClass<*>).isSubclassOf(TableProvider::class)
-        }?.call(
+        }.call(
                 provider
-        )?: throw IllegalArgumentException("Can't resolve table realisation")
+        )
         return result
     }
 

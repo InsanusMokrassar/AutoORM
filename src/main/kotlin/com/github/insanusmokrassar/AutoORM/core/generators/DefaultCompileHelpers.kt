@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar.AutoORM.core.compilers
+package com.github.insanusmokrassar.AutoORM.core.generators
 
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
@@ -12,6 +12,7 @@ import java.util.logging.Logger
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.javaSetter
 
 val providerVariableName = "provider"
@@ -20,6 +21,62 @@ val searchQueryName = "searchQuery"
 val filterName = "filter"
 val pageFilterName = "pageFilter"
 val resultName = "result"
+
+val operationsMethodsBodies = mapOf(
+        Pair(
+                "refresh",
+                {
+                    method: KFunction<*>, whereFrom: KClass<*> ->
+                    val methodBody = StringBuilder()
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
+                    methodBody.append("${whereFrom.simpleName} $resultName = ")
+                            .append(
+                                    resultResolver(
+                                            Collection::class,
+                                            whereFrom,
+                                            "$providerVariableName.find($searchQueryName)"
+                                    )
+                            )
+                            .append(";\n")
+                    whereFrom.getVariables().forEach {
+                        methodBody.append("this.${it.name} = $resultName.${it.getter.javaMethod!!.name}();\n")
+                    }
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
+                            whereFrom.isInterface()
+                    )
+                }
+        ),
+        Pair(
+                "update",
+                {
+                    method: KFunction<*>, whereFrom: KClass<*> ->
+                    val methodBody = StringBuilder()
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
+                    methodBody.append("$providerVariableName.update(this, $searchQueryName);\n")
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
+                            whereFrom.isInterface()
+                    )
+                }
+        ),
+        Pair(
+                "remove",
+                {
+                    method: KFunction<*>, whereFrom: KClass<*> ->
+                    val methodBody = StringBuilder()
+                    methodBody.append(primaryKeyFindBuilder(whereFrom))
+                    methodBody.append("$providerVariableName.remove($searchQueryName);\n")
+                    methodOverrideTemplate(
+                            method,
+                            methodBody.toString(),
+                            whereFrom.isInterface()
+                    )
+                }
+        )
+)
 
 val operations = mapOf(
         Pair(
@@ -479,5 +536,30 @@ class OverridePseudoInfo(
     override fun refreshStacks() {
         nameStack.addAll(presetNames)
         argsNamesStack.addAll(presetArgsNames)
+    }
+}
+
+class OverrideFunctionInfo(override val function: KFunction<*>) : OverrideInfo{
+    val nameParts = function.name.camelCaseWords()
+    val args = function.parameters
+
+    override val nameStack = Stack<String>()
+    override val argsNamesStack = Stack<String>()
+    override val returnClass: KClass<*> = function.returnClass()
+
+    init {
+        refreshStacks()
+    }
+
+    override fun refreshStacks() {
+        nameStack.clear()
+        argsNamesStack.clear()
+
+        nameStack.addAll(nameParts.reversed())
+        argsNamesStack.addAll(args.filter {
+            it.kind != KParameter.Kind.INSTANCE
+        }.select {
+            it.name
+        }.reversed())
     }
 }

@@ -1,8 +1,8 @@
 package com.github.insanusmokrassar.AutoORM.core
 
 import com.github.insanusmokrassar.AutoORM.*
-import com.github.insanusmokrassar.AutoORM.core.compilers.ClassCompiler
-import com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler
+import com.github.insanusmokrassar.AutoORM.core.generators.DefaultRealisationsGenerator
+import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsGenerator
 import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
@@ -16,44 +16,11 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val databasesConfigs: List<IObject<Any>> = config.get<List<Any>>(databasesField).filter {
         it is IObject<*>
     } as List<IObject<Any>>
-    var compilerConfig: IObject<Any>?
-    try {
-        compilerConfig = config.get<IObject<Any>>(classesCompilerField)
-    } catch (e: Exception) {
-        compilerConfig = null
-    }
-    val compiler: ClassCompiler
-    if (compilerConfig == null) {
-        compiler = DefaultClassCompiler()
-    } else {
-        val config: Any?
-        if (compilerConfig.keys().contains(configField)) {
-            config = compilerConfig.get<Any>(configField)
-        } else {
-            config = null
-        }
-        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out ClassCompiler>
-        if (config == null) {
-            try {
-                compiler = compilerClass.constructors.first {
-                    it.parameters.isEmpty()
-                }.call()
-            } catch (e: NoSuchElementException) {
-                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
-            }
-        } else {
-            try {
-                compiler = compilerClass.constructors.first {
-                    it.parameters.size == 1 && it.parameters[0].type.classifier == config::class
-                }.call()
-            } catch (e: NoSuchElementException) {
-                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
-            }
-        }
-    }
 
     val databaseDrivers: MutableMap<String, DatabaseProvider> = HashMap()
     val databasesPools = HashMap<String, ConnectionsPool>()
+
+    val compiler = loadCompiler(config)
 
     databasesConfigs.forEach {
         val provider = getDatabaseProvider(it.get(driverField), databaseDrivers, driversConfigs)
@@ -88,6 +55,43 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
         )
     }
     return databasesPools
+}
+
+fun loadCompiler(config: IObject<Any>): RealisationsGenerator {
+    var compilerConfig: IObject<Any>?
+    try {
+        compilerConfig = config.get<IObject<Any>>(classesCompilerField)
+    } catch (e: Exception) {
+        compilerConfig = null
+    }
+    if (compilerConfig == null) {
+        return DefaultRealisationsGenerator()
+    } else {
+        val config: Any?
+        if (compilerConfig.keys().contains(configField)) {
+            config = compilerConfig.get<Any>(configField)
+        } else {
+            config = null
+        }
+        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out RealisationsGenerator>
+        if (config == null) {
+            try {
+                return compilerClass.constructors.first {
+                    it.parameters.isEmpty()
+                }.call()
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
+            }
+        } else {
+            try {
+                return compilerClass.constructors.first {
+                    it.parameters.size == 1 && it.parameters[0].type.classifier == config::class
+                }.call()
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
+            }
+        }
+    }
 }
 
 private fun getDatabaseProvider(

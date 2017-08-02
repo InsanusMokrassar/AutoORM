@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts
 
-import com.github.insanusmokrassar.AutoORM.core.compilers.OperationsCompiler
+import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsGenerator
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AutoORM.core.getRequiredInConstructor
@@ -11,7 +11,7 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 
 abstract class AbstractTableProvider<M : Any, O : M>(
-        protected val operationsCompiler: OperationsCompiler,
+        protected val operationsCompiler: RealisationsGenerator,
         protected val modelClass: KClass<M>,
         protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
     val variablesMap: Map<String, KProperty<*>> = {
@@ -59,7 +59,7 @@ abstract class AbstractTableProvider<M : Any, O : M>(
     }
 
     protected fun createModelFromValuesMap(values : Map<KProperty<*>, Any>): O {
-        val realisationClass = operationsCompiler.getRealisation(operationsClass)
+        val realisationClass = operationsCompiler.getModelOperationsRealisation(operationsClass)
         if (realisationClass.constructors.isEmpty()) {
             throw IllegalStateException("For some of reason, can't create correct realisation of model")
         } else {

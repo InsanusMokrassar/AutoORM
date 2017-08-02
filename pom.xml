@@ -5,7 +5,7 @@
 
     <groupId>com.github.insanusmokrassar</groupId>
     <artifactId>AutoORM</artifactId>
-    <version>0.7</version>
+    <version>0.8</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -36,8 +36,8 @@
         <dokka.version>0.9.15</dokka.version>
         <gpg.passphraseServerId>bintray-insanusmokrassar-StandardRepository</gpg.passphraseServerId>
         <main.class>com.github.insanusmokrassar.${project.artifactId}.ExampleKt</main.class>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.generator.source>1.7</maven.generator.source>
+        <maven.generator.target>1.7</maven.generator.target>
     </properties>
 
     <pluginRepositories>

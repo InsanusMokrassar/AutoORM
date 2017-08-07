@@ -2,7 +2,13 @@ package com.github.insanusmokrassar.AutoORM.core.generators
 
 import com.github.insanusmokrassar.AutoORM.core.*
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
+import com.github.insanusmokrassar.JavaClassDescriptor.core.FieldDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.core.getDefaultDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.DefaultFieldDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.calls.EquateCallingDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.calls.FieldCallingDescriptor
 import net.openhft.compiler.CompilerUtils
+import java.lang.reflect.Modifier
 import java.util.HashMap
 import kotlin.reflect.KClass
 
@@ -20,20 +26,67 @@ class DefaultRealisationsGenerator(val compiler: RealisationsCompiler) {
         if (!tableInterfaceClass.isAbstract || !tableInterfaceClass.constructors.isEmpty()) {
             throw IllegalArgumentException("Can't override not interface")
         }
-        val methodsToOverride = tableInterfaceClass.getMethodsToOverride()
+        val methodsToOverride = tableInterfaceClass.java.getMethodsToOverride()
 
+        val classDescription = getDefaultDescriptor("${tableInterfaceClass.simpleName}Impl", Modifier.PUBLIC)
+
+        val tableProviderVarDescription = classDescription.addField(
+                providerVariableName,
+                TableProvider::class.java,
+                Modifier.PRIVATE
+        )
+
+        val constructor = classDescription.addConstructor(
+                arrayOf(TableProvider::class.java),
+                Modifier.PUBLIC
+        )
+        constructor.addCalling(
+                EquateCallingDescriptor(
+                        tableProviderVarDescription,
+                        FieldCallingDescriptor(
+                                constructor.fields.first { it.fieldClass == TableProvider::class.java }
+                        )
+                )
+        )
         val classBodyBuilder = StringBuilder()
-        classBodyBuilder.append("${privateFieldTemplate(TableProvider::class, providerVariableName)}\n")
+//        classBodyBuilder.append("${privateFieldTemplate(TableProvider::class, providerVariableName)}\n")
 
-        classBodyBuilder.append("${createConstructorForProperties(tableInterfaceClass, emptyList())}\n")
+//        classBodyBuilder.append("${createConstructorForProperties(tableInterfaceClass, emptyList())}\n")
 
-        val headerBuilder = StringBuilder()
-                .append("${packageTemplate(tableInterfaceClass.getPackage())}\n")
-                .append(preparedImports)
-        methodsToOverride.forEach {
-            addImports(it, headerBuilder)
+        preparedImportsClasses.forEach {
+            classDescription.addImport(it.java)
         }
-        addStandardImports(headerBuilder)
+
+//        val headerBuilder = StringBuilder()
+//                .append("${packageTemplate(tableInterfaceClass.getPackage())}\n")
+//                .append(preparedImports)
+//        methodsToOverride.forEach {
+//            addImports(it, headerBuilder)
+//        }
+//        addStandardImports(headerBuilder)
+
+        methodsToOverride.forEach {
+//            val funcInfo = OverrideFunctionInfo(it)
+            val method = classDescription.addMethod(
+                    it.name,
+                    it.returnType,
+                    it.parameterTypes,
+                    it.modifiers
+            )
+
+            functionCodeBuilder(
+                    classDescription,
+                    method
+            )
+//            classBodyBuilder.append(
+//                    methodOverrideTemplate(
+//                            it,
+//                            functionCodeBuilder(modelInterfaceClass, funcInfo, operations[funcInfo.nameStack.pop()]!!),
+//                            tableInterfaceClass.isInterface()
+//                    )
+//            )
+
+        }
 
         methodsToOverride.forEach {
             val funcInfo = OverrideFunctionInfo(it)

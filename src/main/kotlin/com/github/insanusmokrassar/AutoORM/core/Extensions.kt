@@ -1,5 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core
 
+import java.lang.reflect.Method
 import kotlin.reflect.*
 import kotlin.reflect.full.instanceParameter
 
@@ -125,6 +126,10 @@ fun KType.toJavaPropertyString(printInvariants: Boolean = false) : String {
     return returnedType.toString()
 }
 
+fun KType.toJavaClass(): Class<*> {
+    return (this.classifier as KClass<*>).java
+}
+
 /**
  * @return Преобразованная строка вида "String", "int" если не nullable, "Integer" если nullable, "List<String>".
  */
@@ -238,6 +243,10 @@ fun KClass<*>.getMethodsToOverride() : List<KFunction<*>> {
     return this.members.filter {
         it is KFunction<*> && it.isAbstract
     } as List<KFunction<*>>
+}
+
+fun Class<*>.getMethodsToOverride() : List<Method> {
+    return arrayListOf(*this.methods)
 }
 
 /**

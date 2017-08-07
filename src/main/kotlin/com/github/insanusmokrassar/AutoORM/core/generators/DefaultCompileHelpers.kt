@@ -5,6 +5,12 @@ import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.Filter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.filters.PageFilter
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
+import com.github.insanusmokrassar.JavaClassDescriptor.core.ClassDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.core.FieldDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.core.FuncDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.DefaultFieldDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.DefaultFuncDescriptor
+import com.github.insanusmokrassar.JavaClassDescriptor.realisation.calls.*
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
 import java.util.*
@@ -14,6 +20,7 @@ import kotlin.reflect.full.functions
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.javaSetter
+import kotlin.reflect.jvm.kotlinFunction
 
 val providerVariableName = "provider"
 
@@ -223,7 +230,19 @@ fun classImplementerTemplate(header: String, classBody: String, whatFrom: String
     }
 }
 
-val preparedImports: String = "${importTemplate(NotNull::class.qualifiedName!!)}\n${importTemplate(Nullable::class.qualifiedName!!)}\n${importTemplate(Override::class.qualifiedName!!)}\n${importTemplate(TableProvider::class.qualifiedName!!)}\n"
+val preparedImportsClasses = arrayOf(
+        NotNull::class,
+        Nullable::class,
+        Override::class,
+        TableProvider::class
+)
+val preparedImports: String = {
+    val builder = StringBuilder()
+    preparedImportsClasses.forEach {
+        builder.append("${importTemplate(NotNull::class.qualifiedName!!)}\n")
+    }
+    builder.toString()
+}()
 
 fun packageTemplate(what: String) : String {
     return "package $what;"
@@ -363,6 +382,81 @@ fun constructWhere(funcInfo: OverrideInfo): String {
     return builder.toString()
 }
 
+fun constructWhere(nameStack: Stack<String>, args: Stack<Any>, funcInfo: FuncDescriptor): String {
+//    val builder = StringBuilder()
+    val filters = ArrayList<FieldDescriptor>()
+    while (nameStack.isNotEmpty()
+            && !(nameStack.size == 1
+            && pagingIdentifiers.containsKey(nameStack.peek()))) {
+        var fieldName: String = nameStack.pop()
+        while (nameStack.isNotEmpty()
+                && !filtersArgsCounts.keys.contains(nameStack.peek())
+                && !whereIdentifiersAlgorithms.keys.contains(nameStack.peek())
+                && !linksWithNextCondition.contains(nameStack.peek())) {
+            fieldName += nameStack.pop()
+        }
+        var filterOrOutField: String = ""
+        if (nameStack.isEmpty() || !filtersArgsCounts.keys.contains(nameStack.peek())) {
+            filterOrOutField = "is"
+        } else {
+            filterOrOutField = nameStack.pop()
+        }
+        val isOut = !filtersArgsCounts.keys.contains(filterOrOutField) && filterOrOutField != "not"
+        val currentFilter = DefaultFieldDescriptor(Filter::class.java, 0, "filter${filters.size}", funcInfo)
+        funcInfo.addCalling(
+                FieldCallingDescriptor(currentFilter)
+        )
+        funcInfo.addCalling(
+                ConstructorCallingDescriptor(
+                        currentFilter.fieldClass.constructors[0],
+                        fieldName,
+                        isOut
+                )
+        )
+        if (filterOrOutField == "not") {
+            funcInfo.addCalling(
+                    MethodCallingDescriptor(
+                            currentFilter,
+                            currentFilter.fieldClass.getMethod("setNot", Boolean::class.java),
+                            true
+                    )
+            )
+        }
+        filterOrOutField = nameStack.pop()
+        funcInfo.addCalling(
+                MethodCallingDescriptor(
+                        currentFilter,
+                        currentFilter.fieldClass.getMethod("setFilterName", String::class.java),
+                        filterOrOutField
+                )
+        )
+        for (i: Int in 0..filtersArgsCounts[filterOrOutField]!! - 1) {
+            val arg = args.pop()
+            val param = funcInfo.args.first { it.name == arg }
+            if (param.fieldClass != null && (param.type.classifier as KClass<*>).isSubclassOf(Collection::class)) {
+                currentFilterBuilder.append("$filterName.getArgs().addAll($arg);\n")
+            } else {
+                currentFilterBuilder.append("$filterName.getArgs().add($arg);\n")
+            }
+        }
+        if (nameStack.isNotEmpty() && linksWithNextCondition.contains(nameStack.peek())) {
+            currentFilterBuilder.append("$filterName.setLogicalLink(\"${nameStack.pop()}\");\n")
+        }
+        currentFilterBuilder.append("$searchQueryName.getFilters().add($filterName);\n")
+        filters.add(currentFilterBuilder.toString())
+    }
+
+    for (currentFilterString in filters) {
+        builder.append(currentFilterString)
+    }
+
+    if (!nameStack.empty() && pagingIdentifiers.containsKey(nameStack.peek())) {
+        builder.append(pagingIdentifiers[nameStack.pop()]!!(funcInfo))
+    }
+
+    return builder.toString()
+}
+
 fun constructSearchQuery(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo): String {
     val neededFields = HashSet<String>()
     modelInterfaceClass.getRequiredInConstructor().forEach {
@@ -438,6 +532,73 @@ fun functionCodeBuilder(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo, 
     }
     builder.append(resultBuilder)
     return builder.toString()
+}
+
+fun functionCodeBuilder(classDescriptor: ClassDescriptor, func: FuncDescriptor): String {
+    val commandsStack = Stack<String>()
+    commandsStack.addAll(func.name.camelCaseWords())
+    val operationName = commandsStack.pop()
+
+    val providerMethod = TableProvider::class.functions.first { it.name == operationName }
+    val providerMethodParams = providerMethod.parameters.filter { it.kind != KParameter.Kind.INSTANCE }
+    val tableProviderResult = func.addField(
+            resultName,
+            TableProvider::class.functions.first { it.name== operationName }.returnType.toJavaClass(),
+            0
+    )
+
+    if (providerMethodParams.select { it.type.classifier }.contains(SearchQuery::class)) {
+        val searchVariable = DefaultFieldDescriptor(
+                SearchQuery::class.java,
+                0,
+                searchQueryName,
+                func
+        )
+        func.addCalling(
+                EquateCallingDescriptor(
+                        searchVariable,
+                        ConstructorCallingDescriptor(
+                                searchVariable.fieldClass.constructors.first {
+                                    it.parameterTypes.isEmpty()
+                                }
+                        )
+                )
+        )
+    }
+//    val resultBuilder = StringBuilder()
+//    resultBuilder.append("${TableProvider::class.functions.first { it.name== operationName }.returnType.toJavaPropertyString()} $resultName = $providerVariableName.$operationName(")
+
+//    providerMethodParams.forEach {
+//        val classifier = it.type.classifier
+//        when(classifier) {
+//            SearchQuery::class -> resultBuilder.append(searchQueryName)
+//            else -> {
+//                if (classifier is KTypeParameter && classifier.variance == KVariance.INVARIANT) {
+//                    resultBuilder.append(funcInfo.argsNamesStack.pop())
+//                }
+//            }
+//        }
+//        if (!providerMethodParams.isLast(it)) {
+//            resultBuilder.append(", ")
+//        }
+//    }
+//    resultBuilder.append(");\n")
+//
+//    val resolvedResult = resultResolver(
+//            TableProvider::class.functions.first { it.name== operationName }!!.returnClass(),
+//            funcInfo.returnClass
+//    )
+//    if (resolvedResult.isNotEmpty()) {
+//        resultBuilder.append(
+//            "return $resolvedResult;\n"
+//        )
+//    }
+//    val builder = StringBuilder()
+//    if (providerMethodParams.select({ it.type.classifier }).contains(SearchQuery::class)) {
+//        builder.append("${constructSearchQuery(modelInterfaceClass, funcInfo)}\n")
+//    }
+//    builder.append(resultBuilder)
+//    return builder.toString()
 }
 
 fun methodOverrideTemplate(method: KFunction<*>, methodBody: String, inInterface: Boolean = true): String {

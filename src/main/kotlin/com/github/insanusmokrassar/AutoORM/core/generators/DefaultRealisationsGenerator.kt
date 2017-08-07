@@ -6,7 +6,7 @@ import net.openhft.compiler.CompilerUtils
 import java.util.HashMap
 import kotlin.reflect.KClass
 
-class DefaultRealisationsGenerator : RealisationsGenerator {
+class DefaultRealisationsGenerator(val compiler: RealisationsCompiler) {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
     override fun <T : Any> getTableRealisation(tableInterface: KClass<in T>, modelInterface: KClass<*>) : KClass<T> {

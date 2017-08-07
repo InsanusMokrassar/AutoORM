@@ -2,7 +2,7 @@ package com.github.insanusmokrassar.AutoORM.core
 
 import com.github.insanusmokrassar.AutoORM.*
 import com.github.insanusmokrassar.AutoORM.core.generators.DefaultRealisationsGenerator
-import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsGenerator
+import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
@@ -57,7 +57,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     return databasesPools
 }
 
-fun loadCompiler(config: IObject<Any>): RealisationsGenerator {
+fun loadCompiler(config: IObject<Any>): RealisationsCompiler {
     var compilerConfig: IObject<Any>?
     try {
         compilerConfig = config.get<IObject<Any>>(classesCompilerField)
@@ -73,7 +73,7 @@ fun loadCompiler(config: IObject<Any>): RealisationsGenerator {
         } else {
             config = null
         }
-        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out RealisationsGenerator>
+        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out RealisationsCompiler>
         if (config == null) {
             try {
                 return compilerClass.constructors.first {

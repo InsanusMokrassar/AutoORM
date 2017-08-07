@@ -5,7 +5,7 @@
 
     <groupId>com.github.insanusmokrassar</groupId>
     <artifactId>AutoORM</artifactId>
-    <version>0.8</version>
+    <version>0.9</version>
     <packaging>jar</packaging>
 
     <name>${project.artifactId}</name>
@@ -183,6 +183,11 @@
             <groupId>com.github.insanusmokrassar</groupId>
             <artifactId>IObjectK</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.insanusmokrassar</groupId>
+            <artifactId>JavaClassDescriptor</artifactId>
+            <version>0.1</version>
         </dependency>
         <dependency>
             <groupId>net.openhft</groupId>

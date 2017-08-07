@@ -1,6 +1,6 @@
 package com.github.insanusmokrassar.AutoORM.core.drivers.tables.abstracts
 
-import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsGenerator
+import com.github.insanusmokrassar.AutoORM.core.generators.RealisationsCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.SearchQuery
 import com.github.insanusmokrassar.AutoORM.core.drivers.tables.interfaces.TableProvider
 import com.github.insanusmokrassar.AutoORM.core.getRequiredInConstructor
@@ -11,7 +11,7 @@ import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 
 abstract class AbstractTableProvider<M : Any, O : M>(
-        protected val operationsCompiler: RealisationsGenerator,
+        protected val operationsCompiler: RealisationsCompiler,
         protected val modelClass: KClass<M>,
         protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
     val variablesMap: Map<String, KProperty<*>> = {

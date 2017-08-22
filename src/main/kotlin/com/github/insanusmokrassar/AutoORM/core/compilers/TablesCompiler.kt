@@ -75,9 +75,10 @@ class TablesCompiler(private val compiler: ClassCompiler) {
 
         val aClass = compiler.compile(
                 interfaceImplementerClassNameTemplate(tableInterfaceClass.java.canonicalName),
-                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), tableInterfaceClass.simpleName!!, tableInterfaceClass.isInterface())
+                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), tableInterfaceClass.simpleName!!, tableInterfaceClass.isInterface()),
+                tableInterfaceClass
         )
 
-        return aClass as KClass<out T>
+        return aClass
     }
 }

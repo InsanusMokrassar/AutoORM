@@ -5,11 +5,11 @@ import net.openhft.compiler.CompilerUtils
 import kotlin.reflect.KClass
 
 class DefaultClassCompiler: ClassCompiler {
-    override fun compile(className: String, classCode: String): kotlin.reflect.KClass<*> {
+    override fun <T: Any> compile(className: String, classCode: String, source: KClass<in T>): KClass<T> {
         return CompilerUtils.CACHED_COMPILER.loadFromJava(
                 className,
                 classCode
-        ).kotlin
+        ).kotlin as KClass<T>
     }
 
 }

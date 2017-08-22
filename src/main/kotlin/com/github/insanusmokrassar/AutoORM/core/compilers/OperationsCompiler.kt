@@ -107,8 +107,10 @@ class OperationsCompiler(private val compiler: ClassCompiler) {
 
         val aClass = compiler.compile(
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),
-                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName, whereFrom.isInterface()))
+                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName, whereFrom.isInterface()),
+                whereFrom
+        )
 
-        return aClass as KClass<out O>
+        return aClass
     }
 }

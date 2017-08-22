@@ -16,24 +16,24 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     val databasesConfigs: List<IObject<Any>> = config.get<List<Any>>(databasesField).filter {
         it is IObject<*>
     } as List<IObject<Any>>
-    var compilerConfig: IObject<Any>?
+    var compilerSettings: IObject<Any>?
     try {
-        compilerConfig = config.get<IObject<Any>>(classesCompilerField)
+        compilerSettings = config.get<IObject<Any>>(classesCompilerField)
     } catch (e: Exception) {
-        compilerConfig = null
+        compilerSettings = null
     }
     val compiler: ClassCompiler
-    if (compilerConfig == null) {
+    if (compilerSettings == null) {
         compiler = DefaultClassCompiler()
     } else {
-        val config: Any?
-        if (compilerConfig.keys().contains(configField)) {
-            config = compilerConfig.get<Any>(configField)
+        val compilerConfig: Any?
+        if (compilerSettings.keys().contains(configField)) {
+            compilerConfig = compilerSettings.get<Any>(configField)
         } else {
-            config = null
+            compilerConfig = null
         }
-        val compilerClass = Class.forName(compilerConfig.get(classpathField)).kotlin as KClass<out ClassCompiler>
-        if (config == null) {
+        val compilerClass = Class.forName(compilerSettings.get(classpathField)).kotlin as KClass<out ClassCompiler>
+        if (compilerConfig == null) {
             try {
                 compiler = compilerClass.constructors.first {
                     it.parameters.isEmpty()
@@ -44,7 +44,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
         } else {
             try {
                 compiler = compilerClass.constructors.first {
-                    it.parameters.size == 1 && it.parameters[0].type.classifier == config::class
+                    it.parameters.size == 1 && it.parameters[0].type.classifier == compilerConfig::class
                 }.call()
             } catch (e: NoSuchElementException) {
                 throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
@@ -92,8 +92,7 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
 
 private fun getDatabaseProvider(
         name: String,
-        databaseDrivers:
-        MutableMap<String, DatabaseProvider>,
+        databaseDrivers: MutableMap<String, DatabaseProvider>,
         driversConfigs: List<IObject<Any>>) : DatabaseProvider {
     if (databaseDrivers.containsKey(name)) {
         return databaseDrivers[name]!!

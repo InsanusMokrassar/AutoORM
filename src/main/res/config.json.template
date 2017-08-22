@@ -20,8 +20,8 @@
       "connections": 1
     }
   ],
-  "realisationsGenerator": {
-    "classpath": "com.github.insanusmokrassar.AutoORM.core.generators.DefaultRealisationsGenerator",
+  "classesCompiler": {
+    "classpath": "com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler"
     "config": {}
   }
 }

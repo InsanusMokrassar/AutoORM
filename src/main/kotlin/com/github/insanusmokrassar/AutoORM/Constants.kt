@@ -8,4 +8,4 @@ val databasesField = "databases"
 val connectionsField = "connections"
 val classpathField = "classpath"
 
-val classesCompilerField = "realisationsGenerator"
+val classesCompilerField = "classesCompiler"

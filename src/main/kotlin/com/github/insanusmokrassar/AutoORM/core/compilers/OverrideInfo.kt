@@ -1,4 +1,4 @@
-package com.github.insanusmokrassar.AutoORM.core.generators
+package com.github.insanusmokrassar.AutoORM.core.compilers
 
 import java.util.*
 import kotlin.reflect.KClass

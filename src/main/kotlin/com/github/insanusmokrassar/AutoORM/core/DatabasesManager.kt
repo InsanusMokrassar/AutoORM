@@ -4,52 +4,46 @@ import com.github.insanusmokrassar.AutoORM.*
 import com.github.insanusmokrassar.AutoORM.core.compilers.ClassCompiler
 import com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
+import com.github.insanusmokrassar.iobjectk.exceptions.ReadException
 import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf
 
 @Throws(IllegalArgumentException::class)
 fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
+
     val driversConfigs: List<IObject<Any>> = config.get<List<Any>>(driversField).filter {
         it is IObject<*>
     } as List<IObject<Any>>
+
     val databasesConfigs: List<IObject<Any>> = config.get<List<Any>>(databasesField).filter {
         it is IObject<*>
     } as List<IObject<Any>>
-    var compilerSettings: IObject<Any>?
-    try {
-        compilerSettings = config.get<IObject<Any>>(classesCompilerField)
-    } catch (e: Exception) {
-        compilerSettings = null
-    }
-    val compiler: ClassCompiler
-    if (compilerSettings == null) {
-        compiler = DefaultClassCompiler()
-    } else {
-        val compilerConfig: Any?
-        if (compilerSettings.keys().contains(configField)) {
-            compilerConfig = compilerSettings.get<Any>(configField)
-        } else {
-            compilerConfig = null
-        }
+
+    val compiler: ClassCompiler = try {
+        val compilerSettings = config.get<IObject<Any>>(classesCompilerField)
         val compilerClass = Class.forName(compilerSettings.get(classpathField)).kotlin as KClass<out ClassCompiler>
-        if (compilerConfig == null) {
+        try {
+            val compilerConfig = compilerSettings.get<Object>(configField)
             try {
-                compiler = compilerClass.constructors.first {
+                compilerClass.constructors.first {
+                    it.parameters.size == 1 && compilerConfig::class.isSubclassOf(it.parameters[0].type.classifier as KClass<*>)
+                }.call(compilerConfig)
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
+            }
+        } catch (e: ReadException) {
+            try {
+                compilerClass.constructors.first {
                     it.parameters.isEmpty()
                 }.call()
             } catch (e: NoSuchElementException) {
                 throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
             }
-        } else {
-            try {
-                compiler = compilerClass.constructors.first {
-                    it.parameters.size == 1 && it.parameters[0].type.classifier == compilerConfig::class
-                }.call()
-            } catch (e: NoSuchElementException) {
-                throw IllegalArgumentException("Can't find empty constructor for compiler without args", e)
-            }
         }
+    } catch (e: Exception) {
+        DefaultClassCompiler()
     }
 
     val databaseDrivers: MutableMap<String, DatabaseProvider> = HashMap()

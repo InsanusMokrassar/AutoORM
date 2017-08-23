@@ -105,10 +105,9 @@ class OperationsCompiler(private val compiler: ClassCompiler) {
         }
         addStandardImports(headerBuilder)
 
-        val aClass = compiler.compile(
+        val aClass = compiler.compile<O>(
                 interfaceImplementerClassNameTemplate(whereFrom.java.canonicalName),
-                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName, whereFrom.isInterface()),
-                whereFrom
+                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), whereFrom.java.simpleName, whereFrom.isInterface())
         )
 
         return aClass

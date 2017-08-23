@@ -73,10 +73,9 @@ class TablesCompiler(private val compiler: ClassCompiler) {
             )
         }
 
-        val aClass = compiler.compile(
+        val aClass = compiler.compile<T>(
                 interfaceImplementerClassNameTemplate(tableInterfaceClass.java.canonicalName),
-                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), tableInterfaceClass.simpleName!!, tableInterfaceClass.isInterface()),
-                tableInterfaceClass
+                classImplementerTemplate(headerBuilder.toString(), classBodyBuilder.toString(), tableInterfaceClass.simpleName!!, tableInterfaceClass.isInterface())
         )
 
         return aClass

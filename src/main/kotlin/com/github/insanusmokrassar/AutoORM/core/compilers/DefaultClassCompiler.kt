@@ -1,6 +1,5 @@
 package com.github.insanusmokrassar.AutoORM.core.compilers
 
-import com.github.insanusmokrassar.iobjectk.interfaces.IObject
 import net.openhft.compiler.CompilerUtils
 import kotlin.reflect.KClass
 

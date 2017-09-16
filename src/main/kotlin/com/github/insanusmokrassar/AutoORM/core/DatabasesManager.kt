@@ -4,8 +4,8 @@ import com.github.insanusmokrassar.AutoORM.*
 import com.github.insanusmokrassar.AutoORM.core.compilers.ClassCompiler
 import com.github.insanusmokrassar.AutoORM.core.compilers.DefaultClassCompiler
 import com.github.insanusmokrassar.AutoORM.core.drivers.databases.interfaces.DatabaseProvider
-import com.github.insanusmokrassar.iobjectk.exceptions.ReadException
-import com.github.insanusmokrassar.iobjectk.interfaces.IObject
+import com.github.insanusmokrassar.IObjectK.exceptions.ReadException
+import com.github.insanusmokrassar.IObjectK.interfaces.IObject
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.isSuperclassOf

@@ -49,14 +49,6 @@
     </pluginRepositories>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/res</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-        </resources>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
         <plugins>
             <plugin>
@@ -77,27 +69,6 @@
                         <goals>
                             <goal>test-compile</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${basedir}/target/resources/</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/src/main/res</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

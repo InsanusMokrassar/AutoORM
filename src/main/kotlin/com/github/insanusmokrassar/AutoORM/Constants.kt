@@ -1,11 +1,11 @@
 package com.github.insanusmokrassar.AutoORM
 
-val configField = "config"
-val nameField = "name"
-val driverField = "driver"
-val driversField = "drivers"
-val databasesField = "databases"
-val connectionsField = "connections"
-val classpathField = "classpath"
+const val configField = "config"
+const val nameField = "name"
+const val driverField = "driver"
+const val driversField = "drivers"
+const val databasesField = "databases"
+const val connectionsField = "connections"
+const val classpathField = "classpath"
 
-val classesCompilerField = "classesCompiler"
+const val classesCompilerField = "classesCompiler"

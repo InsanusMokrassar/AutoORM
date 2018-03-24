@@ -7,4 +7,5 @@ class SearchQuery {
     val fields: MutableList<String> = ArrayList()
     val filters : MutableList<Filter> = ArrayList()
     var pageFilter : PageFilter? = null
+    var orderBy: String? = null
 }

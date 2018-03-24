@@ -52,34 +52,31 @@ fun createDatabasesPool(config : IObject<Any>): Map<String, ConnectionsPool> {
     databasesConfigs.forEach {
         val provider = getDatabaseProvider(it.get(driverField), databaseDrivers, driversConfigs)
         val currentConfig = it
-        databasesPools.put(
-                it.get<String>(nameField),
-                ConnectionsPool {
-                    onFree: (DatabaseConnect) -> Unit,
-                    onClose: (DatabaseConnect) -> Unit ->
-                    if (currentConfig.keys().contains(connectionsField)) {
-                        val connections = ArrayList<DatabaseConnect>()
-                        for (i: Int in 0..currentConfig.get<Int>(connectionsField) - 1) {
-                            connections.add(
-                                    provider.getDatabaseConnect(
-                                            currentConfig.get(configField),
-                                            compiler,
-                                            onFree,
-                                            onClose
-                                    )
+        databasesPools[it[nameField]] = ConnectionsPool {
+            onFree: (DatabaseConnect) -> Unit,
+            onClose: (DatabaseConnect) -> Unit ->
+            if (currentConfig.keys().contains(connectionsField)) {
+                val connections = ArrayList<DatabaseConnect>()
+                for (i: Int in 0 until currentConfig[connectionsField]) {
+                    connections.add(
+                            provider.getDatabaseConnect(
+                                    currentConfig.get(configField),
+                                    compiler,
+                                    onFree,
+                                    onClose
                             )
-                        }
-                        connections
-                    } else {
-                        listOf(provider.getDatabaseConnect(
-                                currentConfig.get(configField),
-                                compiler,
-                                onFree,
-                                onClose
-                        ))
-                    }
+                    )
                 }
-        )
+                connections
+            } else {
+                listOf(provider.getDatabaseConnect(
+                        currentConfig.get(configField),
+                        compiler,
+                        onFree,
+                        onClose
+                ))
+            }
+        }
     }
     return databasesPools
 }

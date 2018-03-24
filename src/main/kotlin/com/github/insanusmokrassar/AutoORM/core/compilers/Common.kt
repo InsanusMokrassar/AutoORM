@@ -145,7 +145,7 @@ val whereIdentifiersAlgorithms = mapOf(
                 "by",
                 {
                     funcInfo: OverrideInfo ->
-                    constructWhere(funcInfo)
+                    constructBy(funcInfo)
                 }
         )
 ).plus(pagingIdentifiers)
@@ -249,8 +249,13 @@ fun constructWhere(funcInfo: OverrideInfo): String {
     val builder = StringBuilder()
     val filters = ArrayList<String>()
     while (funcInfo.nameStack.isNotEmpty()
-            && !(funcInfo.nameStack.size == 1
-            && pagingIdentifiers.containsKey(funcInfo.nameStack.peek()))) {
+            && !(
+                    funcInfo.nameStack.size == 1 &&
+                            pagingIdentifiers.containsKey(
+                                    funcInfo.nameStack.peek()
+                            )
+                    )
+    ) {
         val currentFilterBuilder = StringBuilder()
         if (filters.isEmpty()) {
             currentFilterBuilder.append("${Filter::class.simpleName} $filterName;")
@@ -262,11 +267,10 @@ fun constructWhere(funcInfo: OverrideInfo): String {
                 && !linksWithNextCondition.contains(funcInfo.nameStack.peek())) {
             fieldName += funcInfo.nameStack.pop()
         }
-        var filterOrOutField: String = ""
-        if (funcInfo.nameStack.isEmpty() || !filtersArgsCounts.keys.contains(funcInfo.nameStack.peek())) {
-            filterOrOutField = "is"
+        var filterOrOutField = if (funcInfo.nameStack.isEmpty() || !filtersArgsCounts.keys.contains(funcInfo.nameStack.peek())) {
+            "is"
         } else {
-            filterOrOutField = funcInfo.nameStack.pop()
+            funcInfo.nameStack.pop()
         }
         val isOut = !filtersArgsCounts.keys.contains(filterOrOutField) && filterOrOutField != "not"
         currentFilterBuilder.append(
@@ -279,7 +283,7 @@ fun constructWhere(funcInfo: OverrideInfo): String {
             currentFilterBuilder.append("$filterName.setNot(true);\n")
         }
         currentFilterBuilder.append("$filterName.setFilterName(\"$filterOrOutField\");\n")
-        for (i: Int in 0..filtersArgsCounts[filterOrOutField]!! - 1) {
+        for (i: Int in 0 until filtersArgsCounts[filterOrOutField]!!) {
             val arg = funcInfo.argsNamesStack.pop()
             val param = funcInfo.function?.parameters?.first { it.name == arg }
             if (param?.type != null && (param.type.classifier as KClass<*>).isSubclassOf(Collection::class)) {
@@ -306,6 +310,10 @@ fun constructWhere(funcInfo: OverrideInfo): String {
     return builder.toString()
 }
 
+fun constructBy(funcInfo: OverrideInfo): String {
+    funcInfo.argsNamesStack
+}
+
 fun constructSearchQuery(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo): String {
     val neededFields = HashSet<String>()
     modelInterfaceClass.getRequiredInConstructor().forEach {
@@ -325,22 +333,28 @@ fun constructSearchQuery(modelInterfaceClass: KClass<*>, funcInfo: OverrideInfo)
         Logger.getGlobal().warning("Can't find where identifier. Use paging \'all\'")
         searchQueryBody.append(whereIdentifiersAlgorithms["all"]!!(funcInfo))
     }
+    try {
+        searchQueryBody.append(whereIdentifiersAlgorithms[funcInfo.nameStack.pop()]!!(funcInfo))
+    } catch (e: NullPointerException) {
+        Logger.getGlobal().warning("Can't find where identifier. Use paging \'all\'")
+        searchQueryBody.append(whereIdentifiersAlgorithms["all"]!!(funcInfo))
+    }
 
     return searchQueryBody.toString()
 }
 
 fun resultResolver(from: KClass<*>, to: KClass<*>, resultVariable: String = resultName): String {
-    when(from) {
+    return when(from) {
         Collection::class -> when(to) {
-            List::class -> return "new ${ArrayList::class.java.simpleName}($resultVariable)"
-            Boolean::class -> return "!$resultVariable.isEmpty()"
-            Unit::class -> return ""
-            else -> return "(${to.javaObjectType.simpleName})$resultVariable.toArray()[0]"
+            List::class -> "new ${ArrayList::class.java.simpleName}($resultVariable)"
+            Boolean::class -> "!$resultVariable.isEmpty()"
+            Unit::class -> ""
+            else -> "(${to.javaObjectType.simpleName})$resultVariable.toArray()[0]"
         }
-        to -> return resultVariable
+        to -> resultVariable
         else -> when(to) {
-            Unit::class -> return ""
-            else -> return "(${to.javaObjectType.simpleName}) $resultVariable"
+            Unit::class -> ""
+            else -> "(${to.javaObjectType.simpleName}) $resultVariable"
         }
     }
 }

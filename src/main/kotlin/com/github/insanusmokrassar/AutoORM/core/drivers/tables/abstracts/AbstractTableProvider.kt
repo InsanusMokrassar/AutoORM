@@ -13,7 +13,8 @@ import kotlin.reflect.KProperty
 abstract class AbstractTableProvider<M : Any, O : M>(
         protected val operationsCompiler: OperationsCompiler,
         protected val modelClass: KClass<M>,
-        protected val operationsClass: KClass<in O>) : TableProvider<M, O> {
+        protected val operationsClass: KClass<in O>
+) : TableProvider<M, O> {
     val variablesMap: Map<String, KProperty<*>> = {
         val futureMap = LinkedHashMap<String, KProperty<*>>()
         modelClass.getVariables().forEach {

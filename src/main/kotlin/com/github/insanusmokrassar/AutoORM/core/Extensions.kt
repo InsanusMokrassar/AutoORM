@@ -153,27 +153,60 @@ fun KClass<*>.getPrimaryFields() : List<KCallable<*>> {
 }
 
 /**
- * @return true если объект помечен аннотацией [PrimaryKey].
+ * @return true если объект помечен аннотацией [annotatedByClass].
  */
-fun KProperty<*>.isPrimaryField() : Boolean {
+fun KProperty<*>.annotatedBy(annotatedByClass: KClass<*>) : Boolean {
     this.annotations.forEach {
-        if (it.annotationClass == PrimaryKey::class) {
-            return@isPrimaryField true
+        if (it.annotationClass == annotatedByClass) {
+            return true
         }
     }
     return false
 }
 
 /**
+ * @return true если объект помечен аннотацией [PrimaryKey].
+ */
+fun KProperty<*>.isPrimaryField() : Boolean {
+    return annotatedBy(PrimaryKey::class)
+}
+
+/**
+ * @return true если объект помечен аннотацией [OrderBy].
+ */
+fun KProperty<*>.isOrderedBy() : Boolean {
+    return annotatedBy(OrderBy::class)
+}
+
+/**
+ * @return список объектов помеченых аннотацией [OrderBy].
+ */
+fun KClass<*>.orderedBy() : List<KProperty<*>> {
+    return getVariablesToOverride().filter {
+        it.isOrderedBy()
+    }
+}
+
+/**
+ * @return строку, пригодную для использования в запросах и сортировки.
+ */
+fun List<KProperty<*>>.orderedByToSQLString() : String {
+    return joinToString("ORDER BY ", ", ") {
+        "${it.name} ${
+            if ((it.annotations.first { it.annotationClass == OrderBy::class } as OrderBy).ascend) {
+                "ASC"
+            } else {
+                "DESC"
+            }
+        }"
+    }
+}
+
+/**
  * @return true если объект помечен аннотацией [Autoincrement].
  */
 fun KProperty<*>.isAutoincrement() : Boolean {
-    this.annotations.forEach {
-        if (it.annotationClass == Autoincrement::class) {
-            return@isAutoincrement true
-        }
-    }
-    return false
+    return annotatedBy(Autoincrement::class)
 }
 
 /**

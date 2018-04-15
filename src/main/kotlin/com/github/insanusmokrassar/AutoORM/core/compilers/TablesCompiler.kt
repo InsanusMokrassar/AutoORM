@@ -36,6 +36,7 @@ private class OverrideFunctionInfo(override val function: KFunction<*>) : Overri
 class TablesCompiler(private val compiler: ClassCompiler) {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
+    @Synchronized
     fun <T : Any> getRealisation(tableInterface: KClass<in T>, modelInterface: KClass<*>) : KClass<T> {
         if (!compiledMap.containsKey(tableInterface)) {
             compiledMap.put(tableInterface, compile(tableInterface, modelInterface))

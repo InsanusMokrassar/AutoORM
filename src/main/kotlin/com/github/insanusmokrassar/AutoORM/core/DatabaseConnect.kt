@@ -20,6 +20,7 @@ class DatabaseConnect(
     private val operationsCompiler: OperationsCompiler = OperationsCompiler(compiler)
 
     @Throws(IllegalArgumentException::class)
+    @Synchronized
     fun <T : Any, M : Any, O : M> getTable(
             tableOperationsClass: KClass<T>,
             tableModelClass: KClass<M>,

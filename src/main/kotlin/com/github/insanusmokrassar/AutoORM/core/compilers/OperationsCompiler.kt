@@ -66,6 +66,7 @@ private val methodsBodies = mapOf(
 class OperationsCompiler(private val compiler: ClassCompiler) {
     private val compiledMap : MutableMap<KClass<out Any>, KClass<out Any>> = HashMap()
 
+    @Synchronized
     fun <O : Any> getRealisation(what : KClass<in O>) : KClass<out O> {
         if (!compiledMap.containsKey(what)) {
             compiledMap.put(what, compile(what))
